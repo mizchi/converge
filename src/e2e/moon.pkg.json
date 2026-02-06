@@ -1,0 +1,8 @@
+{
+  "test-import": [
+    "mizchi/crdt_db/types",
+    "mizchi/crdt_db/doc",
+    "mizchi/crdt_db/sync",
+    "mizchi/crdt_db/merge"
+  ]
+}

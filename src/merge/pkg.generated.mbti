@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/merge"
+
+import {
+  "mizchi/crdt_db/graph",
+  "mizchi/crdt_db/types",
+}
+
+// Values
+pub fn merge(@graph.EventGraph, Array[@types.EventId], Array[@types.Event]) -> Array[MergeOp]
+
+pub fn op_key(@types.RowOp) -> (String, String, String)
+
+pub fn resolve_lww(@types.Event, @types.Event) -> @types.Event
+
+// Errors
+
+// Types and methods
+type ConflictKey
+pub impl Eq for ConflictKey
+pub impl Hash for ConflictKey
+
+pub(all) enum MergeOp {
+  SetCell(tbl~ : String, row_id~ : String, col~ : String, value~ : @types.Value)
+  InsertRow(tbl~ : String, row_id~ : String, values~ : Array[(String, @types.Value)])
+  DeleteRow(tbl~ : String, row_id~ : String)
+}
+pub impl Eq for MergeOp
+pub impl Show for MergeOp
+
+// Type aliases
+
+// Traits
+

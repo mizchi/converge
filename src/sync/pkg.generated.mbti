@@ -1,0 +1,48 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/sync"
+
+import {
+  "mizchi/crdt_db/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct InMemoryTransport {
+  events : Array[@types.Event]
+  frontier : Array[@types.EventId]
+  peer_versions : Map[@types.PeerId, Int]
+}
+pub fn InMemoryTransport::new() -> Self
+pub impl SyncTransport for InMemoryTransport
+
+pub(all) struct PullRequest {
+  peer_id : @types.PeerId
+  known_peers : Map[@types.PeerId, Int]
+}
+pub impl Show for PullRequest
+
+pub(all) struct PullResponse {
+  events : Array[@types.EventRun]
+  server_frontier : Array[@types.EventId]
+  has_more : Bool
+}
+pub impl Show for PullResponse
+
+pub(all) struct PushRequest {
+  peer_id : @types.PeerId
+  events : Array[@types.EventRun]
+  frontier : Array[@types.EventId]
+}
+pub impl Show for PushRequest
+
+// Type aliases
+
+// Traits
+pub(open) trait SyncTransport {
+  push(Self, PushRequest) -> Unit raise
+  pull(Self, PullRequest) -> PullResponse raise
+}
+

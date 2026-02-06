@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/clock"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct LamportClock {
+  mut counter : Int
+}
+pub fn LamportClock::merge(Self, Int) -> Unit
+pub fn LamportClock::new() -> Self
+pub fn LamportClock::tick(Self) -> Int
+
+// Type aliases
+
+// Traits
+

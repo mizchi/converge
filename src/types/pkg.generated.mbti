@@ -1,0 +1,66 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/types"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct Event {
+  id : EventId
+  deps : Array[EventId]
+  lamport : Int
+  op : RowOp
+}
+pub impl Eq for Event
+pub impl Show for Event
+
+pub(all) struct EventId {
+  peer : PeerId
+  counter : Int
+}
+pub impl Compare for EventId
+pub impl Eq for EventId
+pub impl Hash for EventId
+pub impl Show for EventId
+
+pub(all) struct EventRun {
+  peer : PeerId
+  counter_start : Int
+  lamport_start : Int
+  deps : Array[EventId]
+  ops : Array[RowOp]
+}
+pub impl Eq for EventRun
+pub impl Show for EventRun
+
+pub(all) struct PeerId(String)
+#deprecated
+pub fn PeerId::inner(Self) -> String
+pub impl Compare for PeerId
+pub impl Eq for PeerId
+pub impl Hash for PeerId
+pub impl Show for PeerId
+
+pub(all) enum RowOp {
+  Insert(tbl~ : String, row_id~ : String, values~ : Array[(String, Value)])
+  Update(tbl~ : String, row_id~ : String, col~ : String, value~ : Value)
+  Delete(tbl~ : String, row_id~ : String)
+}
+pub impl Eq for RowOp
+pub impl Show for RowOp
+
+pub(all) enum Value {
+  Null
+  Bool(Bool)
+  Int(Int)
+  Float(Double)
+  Str(String)
+}
+pub impl Eq for Value
+pub impl Show for Value
+
+// Type aliases
+
+// Traits
+

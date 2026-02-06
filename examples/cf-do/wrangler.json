@@ -1,0 +1,20 @@
+{
+  "name": "crdt-db-sync",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CRDT_DOC",
+        "class_name": "CrdtDoc"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["CrdtDoc"]
+    }
+  ]
+}

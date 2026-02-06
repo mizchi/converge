@@ -1,0 +1,34 @@
+{
+  "import": [
+    "mizchi/crdt_db/types",
+    "mizchi/crdt_db/doc",
+    "mizchi/crdt_db/merge",
+    "moonbitlang/core/json"
+  ],
+  "supported-targets": ["wasm-gc", "js"],
+  "link": {
+    "wasm-gc": {
+      "use-js-builtin-string": true,
+      "exports": [
+        "create_doc",
+        "doc_insert",
+        "doc_update",
+        "doc_delete",
+        "doc_merge_remote",
+        "doc_get_pending",
+        "doc_sync_state"
+      ]
+    },
+    "js": {
+      "exports": [
+        "create_doc",
+        "doc_insert",
+        "doc_update",
+        "doc_delete",
+        "doc_merge_remote",
+        "doc_get_pending",
+        "doc_sync_state"
+      ]
+    }
+  }
+}

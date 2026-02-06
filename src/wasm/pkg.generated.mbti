@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/wasm"
+
+// Values
+pub fn create_doc(String) -> Int
+
+pub fn doc_delete(Int, String, String) -> String
+
+pub fn doc_get_pending(Int, String) -> String
+
+pub fn doc_insert(Int, String, String, String) -> String
+
+pub fn doc_merge_remote(Int, String) -> String
+
+pub fn doc_sync_state(Int) -> String
+
+pub fn doc_update(Int, String, String, String, String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

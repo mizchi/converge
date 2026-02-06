@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/oplog"
+
+import {
+  "mizchi/crdt_db/types",
+}
+
+// Values
+pub fn compress(Array[@types.Event]) -> Array[@types.EventRun]
+
+pub fn expand(Array[@types.EventRun]) -> Array[@types.Event]
+
+// Errors
+
+// Types and methods
+pub(all) struct OpLog {
+  runs : Array[@types.EventRun]
+  peer_versions : Map[@types.PeerId, Int]
+}
+pub fn OpLog::append(Self, @types.Event) -> Unit
+pub fn OpLog::events_after(Self, Map[@types.PeerId, Int]) -> Array[@types.EventRun]
+pub fn OpLog::new() -> Self
+
+// Type aliases
+
+// Traits
+

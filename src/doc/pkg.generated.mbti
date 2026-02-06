@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/doc"
+
+import {
+  "mizchi/crdt_db/clock",
+  "mizchi/crdt_db/graph",
+  "mizchi/crdt_db/merge",
+  "mizchi/crdt_db/oplog",
+  "mizchi/crdt_db/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct CrdtDoc {
+  peer_id : @types.PeerId
+  clock : @clock.LamportClock
+  graph : @graph.EventGraph
+  oplog : @oplog.OpLog
+  mut counter : Int
+}
+pub fn CrdtDoc::delete(Self, tbl~ : String, row_id~ : String) -> @types.Event
+pub fn CrdtDoc::get_pending(Self, Map[@types.PeerId, Int]) -> Array[@types.EventRun]
+pub fn CrdtDoc::insert(Self, tbl~ : String, row_id~ : String, values~ : Array[(String, @types.Value)]) -> @types.Event
+pub fn CrdtDoc::merge_remote(Self, Array[@types.EventRun]) -> Array[@merge.MergeOp]
+pub fn CrdtDoc::new(peer_id~ : String) -> Self
+pub fn CrdtDoc::sync_state(Self) -> (Array[@types.EventId], Map[@types.PeerId, Int])
+pub fn CrdtDoc::update(Self, tbl~ : String, row_id~ : String, col~ : String, value~ : @types.Value) -> @types.Event
+
+// Type aliases
+
+// Traits
+

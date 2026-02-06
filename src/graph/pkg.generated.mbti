@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/crdt_db/graph"
+
+import {
+  "mizchi/crdt_db/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct EventGraph {
+  events : Map[@types.EventId, @types.Event]
+  frontier : Array[@types.EventId]
+  frontier_set : Map[@types.EventId, Unit]
+}
+pub fn EventGraph::add_event(Self, @types.Event) -> Unit
+pub fn EventGraph::events_since(Self, Array[@types.EventId]) -> Array[@types.Event]
+pub fn EventGraph::find_lca(Self, Array[@types.EventId], Array[@types.EventId]) -> Array[@types.EventId]
+pub fn EventGraph::new() -> Self
+
+// Type aliases
+
+// Traits
+

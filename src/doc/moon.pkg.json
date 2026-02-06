@@ -1,0 +1,10 @@
+{
+  "import": [
+    "mizchi/crdt_db/types",
+    "mizchi/crdt_db/clock",
+    "mizchi/crdt_db/graph",
+    "mizchi/crdt_db/oplog",
+    "mizchi/crdt_db/merge",
+    "moonbitlang/core/bench"
+  ]
+}

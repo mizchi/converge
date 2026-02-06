@@ -1,0 +1,23 @@
+{
+  "unstable": [
+    "kv"
+  ],
+  "tasks": {
+    "dev": "deno run -A --watch main.ts",
+    "start": "deno run -A main.ts"
+  },
+  "deploy": {
+    "project": "914cad13-7135-40b1-aecb-fb1d5fce1f19",
+    "exclude": [
+      "**/node_modules"
+    ],
+    "include": [
+      "main.ts",
+      "wasm.ts",
+      "store.ts",
+      "crdt.wasm",
+      "deno.json"
+    ],
+    "entrypoint": "main.ts"
+  }
+}
