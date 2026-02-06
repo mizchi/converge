@@ -1,0 +1,15 @@
+{
+  "name": "crdt-db-game",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "sim": "npx tsx src/sim.ts",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0",
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "typescript": "^5.7.0",
+    "tsx": "^4.0.0"
+  }
+}

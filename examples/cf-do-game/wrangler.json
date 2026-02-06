@@ -1,0 +1,20 @@
+{
+  "name": "crdt-db-game",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "GAME_RELAY",
+        "class_name": "GameRelay"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["GameRelay"]
+    }
+  ]
+}
