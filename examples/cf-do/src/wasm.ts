@@ -9,6 +9,10 @@ interface CrdtExports {
   doc_insert(handle: number, tbl: string, row_id: string, values_json: string): string;
   doc_update(handle: number, tbl: string, row_id: string, col: string, value_json: string): string;
   doc_delete(handle: number, tbl: string, row_id: string): string;
+  ephemeral_set(handle: number, ns: string, key: string, value_json: string, timestamp: number): string;
+  ephemeral_get(handle: number, ns: string, key: string): string;
+  ephemeral_get_all(handle: number, ns: string): string;
+  ephemeral_merge(handle: number, entries_json: string): string;
 }
 
 export interface EventRun {
@@ -36,6 +40,13 @@ export interface MergeOp {
 export interface SyncState {
   frontier: [string, number][];
   versions: Record<string, number>;
+}
+
+export interface EphemeralEntry {
+  key: string;
+  value: unknown;
+  timestamp: number;
+  peer: string;
 }
 
 let wasm: CrdtExports | null = null;
@@ -67,6 +78,26 @@ export class CrdtServer {
 
   syncState(): SyncState {
     const result = wasm!.doc_sync_state(this.handle);
+    return JSON.parse(result);
+  }
+
+  ephemeralSet(ns: string, key: string, value: unknown, timestamp: number): EphemeralEntry {
+    const result = wasm!.ephemeral_set(this.handle, ns, key, JSON.stringify(value), timestamp);
+    return JSON.parse(result);
+  }
+
+  ephemeralGet(ns: string, key: string): EphemeralEntry | null {
+    const result = wasm!.ephemeral_get(this.handle, ns, key);
+    return result === "null" ? null : JSON.parse(result);
+  }
+
+  ephemeralGetAll(ns: string): Record<string, EphemeralEntry> {
+    const result = wasm!.ephemeral_get_all(this.handle, ns);
+    return JSON.parse(result);
+  }
+
+  ephemeralMerge(entries: Record<string, Record<string, EphemeralEntry>>): Record<string, Record<string, EphemeralEntry>> {
+    const result = wasm!.ephemeral_merge(this.handle, JSON.stringify(entries));
     return JSON.parse(result);
   }
 }

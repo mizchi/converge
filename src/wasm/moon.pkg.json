@@ -3,6 +3,7 @@
     "mizchi/crdt_db/types",
     "mizchi/crdt_db/doc",
     "mizchi/crdt_db/merge",
+    "mizchi/crdt_db/ephemeral",
     "moonbitlang/core/json"
   ],
   "supported-targets": ["wasm-gc", "js"],
@@ -16,7 +17,11 @@
         "doc_delete",
         "doc_merge_remote",
         "doc_get_pending",
-        "doc_sync_state"
+        "doc_sync_state",
+        "ephemeral_set",
+        "ephemeral_get",
+        "ephemeral_get_all",
+        "ephemeral_merge"
       ]
     },
     "js": {
@@ -27,7 +32,11 @@
         "doc_delete",
         "doc_merge_remote",
         "doc_get_pending",
-        "doc_sync_state"
+        "doc_sync_state",
+        "ephemeral_set",
+        "ephemeral_get",
+        "ephemeral_get_all",
+        "ephemeral_merge"
       ]
     }
   }

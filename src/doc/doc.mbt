@@ -1,5 +1,13 @@
 ///|
-/// CrdtDoc: high-level API combining EventGraph + OpLog + Clock
+/// CrdtDoc — the **Durable Layer** of the two-tier architecture.
+///
+/// Wraps EventGraph + OpLog + LamportClock to provide a high-level API
+/// for recording row operations that are durably stored in a causal event
+/// graph. Every mutation is captured as an Event with explicit causal
+/// dependencies, enabling deterministic conflict resolution via EG-Walker.
+///
+/// For high-frequency ephemeral state (cursors, presence, etc.), use
+/// `EphemeralStore` instead — it bypasses the event graph entirely.
 pub(all) struct CrdtDoc {
   peer_id : @types.PeerId
   clock : @clock.LamportClock

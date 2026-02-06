@@ -1,4 +1,4 @@
-import { CrdtServer, loadWasm, type EventRun } from "./wasm";
+import { CrdtServer, loadWasm, type EventRun, type EphemeralEntry } from "./wasm";
 
 export interface Env {
   CRDT_DOC: DurableObjectNamespace;
@@ -13,7 +13,7 @@ export default {
     }
 
     const url = new URL(request.url);
-    if (!url.pathname.startsWith("/api/")) {
+    if (!url.pathname.startsWith("/api/") && url.pathname !== "/ws") {
       return jsonError("not found", 404);
     }
 
@@ -29,6 +29,7 @@ export default {
 export class CrdtDoc implements DurableObject {
   private crdt: CrdtServer | null = null;
   private state: DurableObjectState;
+  private sessions: Map<WebSocket, { peerId: string }> = new Map();
 
   constructor(state: DurableObjectState, _env: Env) {
     this.state = state;
@@ -53,6 +54,69 @@ export class CrdtDoc implements DurableObject {
     const crdt = this.crdt!;
     const url = new URL(request.url);
     const t = Date.now();
+
+    // GET /ws — WebSocket upgrade for ephemeral state
+    if (url.pathname === "/ws") {
+      if (request.headers.get("Upgrade") !== "websocket") {
+        return jsonError("expected WebSocket upgrade", 426);
+      }
+      const pair = new WebSocketPair();
+      const [client, server] = [pair[0], pair[1]];
+      const peerId = url.searchParams.get("peer_id") ?? `anon-${Date.now()}`;
+
+      server.accept();
+      this.sessions.set(server, { peerId });
+
+      // Send current ephemeral snapshot on connect
+      const snapshot = crdt.ephemeralGetAll("presence");
+      server.send(JSON.stringify({ type: "snapshot", ns: "presence", entries: snapshot }));
+      console.log(`WS connect peer=${peerId} sessions=${this.sessions.size} ${Date.now() - t}ms`);
+
+      server.addEventListener("message", (event) => {
+        try {
+          const msg = JSON.parse(event.data as string);
+          if (msg.type === "ephemeral_update") {
+            // { type: "ephemeral_update", ns, entries: { key: { value, timestamp, peer } } }
+            const ns: string = msg.ns ?? "presence";
+            const entries: Record<string, Record<string, EphemeralEntry>> = { [ns]: msg.entries };
+            const changed = crdt.ephemeralMerge(entries);
+            // Broadcast changes to all other connected clients
+            if (Object.keys(changed).length > 0) {
+              const broadcast = JSON.stringify({ type: "ephemeral_diff", ...changed });
+              for (const [ws, session] of this.sessions) {
+                if (ws !== server && ws.readyState === 1) {
+                  try { ws.send(broadcast); } catch { /* ignore send errors */ }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error(`WS message error: ${e}`);
+        }
+      });
+
+      server.addEventListener("close", () => {
+        const session = this.sessions.get(server);
+        this.sessions.delete(server);
+        // Remove disconnected peer's ephemeral state
+        if (session) {
+          // Notify remaining clients about the departure
+          const departure = JSON.stringify({ type: "peer_left", peer_id: session.peerId });
+          for (const [ws] of this.sessions) {
+            if (ws.readyState === 1) {
+              try { ws.send(departure); } catch { /* ignore */ }
+            }
+          }
+        }
+        console.log(`WS disconnect peer=${session?.peerId} sessions=${this.sessions.size}`);
+      });
+
+      server.addEventListener("error", () => {
+        this.sessions.delete(server);
+      });
+
+      return new Response(null, { status: 101, webSocket: client });
+    }
 
     // GET /api/state
     if (request.method === "GET" && url.pathname === "/api/state") {

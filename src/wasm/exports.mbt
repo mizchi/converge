@@ -3,10 +3,16 @@
 let docs : Array[@doc.CrdtDoc] = []
 
 ///|
-/// Create a new CRDT document and return its handle
+/// Ephemeral store handle storage (parallel to docs)
+let ephemeral_stores : Array[@ephemeral.EphemeralStore] = []
+
+///|
+/// Create a new CRDT document and return its handle.
+/// Also creates a paired EphemeralStore at the same index.
 pub fn create_doc(peer_id : String) -> Int {
   let doc = @doc.CrdtDoc::new(peer_id~)
   docs.push(doc)
+  ephemeral_stores.push(@ephemeral.EphemeralStore::new())
   docs.length() - 1
 }
 
@@ -341,4 +347,94 @@ fn parse_known_peers(s : String) -> Map[@types.PeerId, Int] {
     result[@types.PeerId(key)] = n.to_int()
   }
   result
+}
+
+// --- Ephemeral Layer API ---
+
+///|
+/// Set an ephemeral value. Returns the entry as JSON.
+pub fn ephemeral_set(
+  handle : Int,
+  ns : String,
+  key : String,
+  value_json : String,
+  timestamp : Double,
+) -> String {
+  let store = ephemeral_stores[handle]
+  let @types.PeerId(peer_str) = docs[handle].peer_id
+  let peer = @types.PeerId(peer_str)
+  let value = parse_value(value_json)
+  store.set(ns, key, value, timestamp, peer)
+  ephemeral_entry_to_json(
+    key,
+    { value, timestamp, peer },
+  ).stringify()
+}
+
+///|
+/// Get a single ephemeral entry. Returns JSON or "null".
+pub fn ephemeral_get(handle : Int, ns : String, key : String) -> String {
+  let store = ephemeral_stores[handle]
+  match store.get(ns, key) {
+    Some(entry) => ephemeral_entry_to_json(key, entry).stringify()
+    None => "null"
+  }
+}
+
+///|
+/// Get all entries in a namespace. Returns JSON object.
+pub fn ephemeral_get_all(handle : Int, ns : String) -> String {
+  let store = ephemeral_stores[handle]
+  let entries = store.get_all(ns)
+  let result : Map[String, Json] = Map::new()
+  for k, entry in entries {
+    result[k] = ephemeral_entry_to_json(k, entry)
+  }
+  Json::object(result).stringify()
+}
+
+///|
+/// Merge remote ephemeral entries. entries_json: {"ns": {"key": {value, timestamp, peer}, ...}, ...}
+/// Returns JSON with changed entries only.
+pub fn ephemeral_merge(handle : Int, entries_json : String) -> String {
+  let store = ephemeral_stores[handle]
+  let json = try! @json.parse(entries_json)
+  let changed : Map[String, Json] = Map::new()
+  guard json is Object(ns_map) else { return "{}".to_string() }
+  for ns, ns_val in ns_map {
+    guard ns_val is Object(key_map) else { continue }
+    let ns_changed : Map[String, Json] = Map::new()
+    for key, entry_json in key_map {
+      guard entry_json is Object(obj) else { continue }
+      let value = json_to_value(obj.get("value").unwrap_or(Json::null()))
+      guard obj["timestamp"] is Number(ts, ..) else { continue }
+      guard obj["peer"] is String(peer_str) else { continue }
+      let entry : @ephemeral.EphemeralEntry = {
+        value,
+        timestamp: ts,
+        peer: @types.PeerId(peer_str),
+      }
+      if store.merge(ns, key, entry) {
+        ns_changed[key] = ephemeral_entry_to_json(key, entry)
+      }
+    }
+    if ns_changed.length() > 0 {
+      changed[ns] = Json::object(ns_changed)
+    }
+  }
+  Json::object(changed).stringify()
+}
+
+///|
+fn ephemeral_entry_to_json(
+  key : String,
+  entry : @ephemeral.EphemeralEntry,
+) -> Json {
+  let @types.PeerId(peer_str) = entry.peer
+  Json::object({
+    "key": Json::string(key),
+    "value": value_to_json(entry.value),
+    "timestamp": Json::number(entry.timestamp),
+    "peer": Json::string(peer_str),
+  })
 }
