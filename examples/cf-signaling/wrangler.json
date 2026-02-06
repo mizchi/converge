@@ -1,0 +1,20 @@
+{
+  "name": "crdt-db-signaling",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SIGNALING_RELAY",
+        "class_name": "SignalingRelay"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["SignalingRelay"]
+    }
+  ]
+}
