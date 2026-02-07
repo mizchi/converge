@@ -108,10 +108,32 @@ P2P 環境でのチート検出のため、Kleppmann の "Making CRDTs Byzantine
 
 暗号プリミティブは `Hasher` / `Signer` / `Verifier` trait で抽象化されており、テスト用の FNV-1a + Mock 実装と、本番用の SHA-256 + Ed25519 実装を差し替え可能。
 
-## Examples
+## 推奨バックエンドアダプター
 
-- `examples/cf-do/` — Cloudflare Durable Objects (HTTP sync + WebSocket for ephemeral state)
-- `examples/deno-deploy/` — Deno Deploy (HTTP sync)
+| プラットフォーム | レイヤー | WASM ターゲット | 同期方式 | Example |
+|----------|--------|-------------|------|---------|
+| **Cloudflare Workers + Durable Objects** | Durable + Ephemeral | `js` | HTTP push/pull + WebSocket | `examples/cf-do/` |
+| **Deno Deploy + Deno KV** | Durable | `wasm-gc` | HTTP push/pull | `examples/deno-deploy/` |
+
+### Cloudflare Workers + Durable Objects（推奨）
+
+本番利用に最適。ドキュメントごとに単一の Durable Object インスタンスが CRDT 状態と永続ストレージ（DO Storage）を同一ロケーションに配置する。HTTP エンドポイントで Durable Layer の push/pull 同期を行い、WebSocket 接続で Ephemeral Layer の状態をリアルタイム配信する。
+
+- Durable Layer: イベントを `event:<counter>` キーで DO Storage に永続化、起動時に `blockConcurrencyWhile()` でリプレイ
+- Ephemeral Layer: LWW マージによる WebSocket リレー（プレゼンス、カーソル、ゲーム状態）
+- CF Workers の制約に対応するため WASM は dynamic import で読み込み
+
+### Deno Deploy + Deno KV
+
+Deno KV を永続化に使う軽量な選択肢。catchUp メカニズムにより、他のアイソレートが書き込んだイベントを検出するマルチアイソレート並行処理に対応。WASM-GC ターゲット + JS String Builtins を使用。
+
+- 大きな EventRun は 50 操作単位に分割（KV の 64KB 値制限対応）
+- 最大 10 ミューテーションのアトミックバッチ書き込み
+
+### その他の Example
+
+- `examples/cf-do-game/` — リアルタイム 5v5 ゲームシミュレーション（Ephemeral Layer のみ、WebSocket）
+- `examples/cf-signaling/` — Star/Gossip トポロジ切替可能な P2P シグナリングリレー（Ephemeral Layer のみ、WebSocket）
 
 ## License
 

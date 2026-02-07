@@ -108,10 +108,32 @@ Verification layer based on Kleppmann's "Making CRDTs Byzantine Fault Tolerant" 
 
 Crypto primitives are abstracted via `Hasher` / `Signer` / `Verifier` traits, allowing swappable implementations (FNV-1a + Mock for testing, SHA-256 + Ed25519 for production).
 
-## Examples
+## Recommended Backend Adapters
 
-- `examples/cf-do/` — Cloudflare Durable Objects with HTTP sync + WebSocket for ephemeral state
-- `examples/deno-deploy/` — Deno Deploy with HTTP sync
+| Platform | Layers | WASM Target | Sync | Example |
+|----------|--------|-------------|------|---------|
+| **Cloudflare Workers + Durable Objects** | Durable + Ephemeral | `js` | HTTP push/pull + WebSocket | `examples/cf-do/` |
+| **Deno Deploy + Deno KV** | Durable | `wasm-gc` | HTTP push/pull | `examples/deno-deploy/` |
+
+### Cloudflare Workers + Durable Objects (Recommended)
+
+Best fit for production use. A single Durable Object instance per document co-locates CRDT state with persistent storage (DO Storage). HTTP endpoints handle push/pull sync for the Durable Layer, while WebSocket connections broadcast Ephemeral Layer state in real-time.
+
+- Durable Layer: events persisted as `event:<counter>` keys in DO Storage, replayed on startup via `blockConcurrencyWhile()`
+- Ephemeral Layer: WebSocket relay with LWW merge for presence, cursors, game state
+- WASM loaded via dynamic import to work within CF Workers constraints
+
+### Deno Deploy + Deno KV
+
+Lightweight alternative using Deno KV for persistence. Supports multi-isolate concurrency with a catchUp mechanism that detects events written by other isolates. Uses WASM-GC target with JS String Builtins.
+
+- Large EventRuns split into 50-op chunks (64KB KV value limit)
+- Atomic batch writes with max 10 mutations per commit
+
+### Additional Examples
+
+- `examples/cf-do-game/` — Real-time 5v5 game simulation (Ephemeral Layer only, WebSocket)
+- `examples/cf-signaling/` — P2P signaling relay with Star/Gossip topology modes (Ephemeral Layer only, WebSocket)
 
 ## License
 
