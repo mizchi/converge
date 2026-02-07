@@ -4,7 +4,7 @@
 /// Collect all entries from an EphemeralStore for given namespaces.
 pub fn collect_entries(
   store : @ephemeral.EphemeralStore,
-  namespaces : Array[String]
+  namespaces : Array[String],
 ) -> Array[(String, String, @ephemeral.EphemeralEntry)] {
   let result : Array[(String, String, @ephemeral.EphemeralEntry)] = []
   for ns in namespaces {
@@ -22,7 +22,7 @@ pub fn pick_random_targets(
   rng : Rng,
   total : Int,
   exclude : Int,
-  count : Int
+  count : Int,
 ) -> Array[Int] {
   let targets : Array[Int] = []
   // Build candidate list
@@ -51,7 +51,7 @@ pub fn pick_random_targets(
 /// Two peers are inconsistent if any (ns, key) entry differs.
 pub fn count_inconsistent_pairs(
   nodes : Array[SimNode],
-  namespaces : Array[String]
+  namespaces : Array[String],
 ) -> Int {
   let n = nodes.length()
   let mut inconsistent = 0
@@ -104,7 +104,7 @@ pub fn count_inconsistent_pairs(
 pub fn count_filtered_inconsistent_pairs(
   nodes : Array[SimNode],
   subscriptions : Map[Int, Array[String]],
-  all_namespaces : Array[String]
+  all_namespaces : Array[String],
 ) -> Int {
   let n = nodes.length()
   let mut inconsistent = 0
@@ -174,7 +174,7 @@ pub fn count_filtered_inconsistent_pairs(
 /// Count total entries across all nodes
 pub fn count_total_entries(
   nodes : Array[SimNode],
-  namespaces : Array[String]
+  namespaces : Array[String],
 ) -> Int {
   let mut total = 0
   for node in nodes {

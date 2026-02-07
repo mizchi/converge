@@ -1,9 +1,5 @@
 ///|
-fn make_event(
-  peer : String,
-  counter : Int,
-  lamport : Int
-) -> @types.Event {
+fn make_event(peer : String, counter : Int, lamport : Int) -> @types.Event {
   {
     id: { peer: @types.PeerId(peer), counter },
     deps: [],

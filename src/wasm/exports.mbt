@@ -365,10 +365,7 @@ pub fn ephemeral_set(
   let peer = @types.PeerId(peer_str)
   let value = parse_value(value_json)
   store.set(ns, key, value, timestamp, peer)
-  ephemeral_entry_to_json(
-    key,
-    { value, timestamp, peer },
-  ).stringify()
+  ephemeral_entry_to_json(key, { value, timestamp, peer }).stringify()
 }
 
 ///|

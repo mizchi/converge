@@ -36,7 +36,7 @@ fn NetPipe::send(
   self : NetPipe,
   current_tick : Int,
   src : EphemeralStore,
-  namespaces : Array[String]
+  namespaces : Array[String],
 ) -> Unit {
   let entries : Array[(String, String, EphemeralEntry)] = []
   for ns in namespaces {
@@ -45,10 +45,7 @@ fn NetPipe::send(
       entries.push((ns, key, entry))
     }
   }
-  self.queue.push({
-    arrival_tick: current_tick + self.delay_ticks,
-    entries,
-  })
+  self.queue.push({ arrival_tick: current_tick + self.delay_ticks, entries })
 }
 
 ///|
@@ -56,7 +53,7 @@ fn NetPipe::send(
 fn NetPipe::receive(
   self : NetPipe,
   current_tick : Int,
-  dst : EphemeralStore
+  dst : EphemeralStore,
 ) -> Int {
   let mut merged = 0
   let remaining : Array[InFlightPacket] = []
@@ -97,7 +94,7 @@ priv struct LatencyStats {
 fn LatencyStats::new(
   label : String,
   ping_ms : Int,
-  player_count : Int
+  player_count : Int,
 ) -> LatencyStats {
   {
     label,
@@ -119,7 +116,7 @@ fn LatencyStats::new(
 fn run_aram_with_latency(
   ticks : Int,
   rng : Rng,
-  ping_config : Array[(Int, Int)]
+  ping_config : Array[(Int, Int)],
 ) -> Array[LatencyStats] {
   let all_ns = [
     "pos", "hp", "gold", "alive", "monster_pos", "monster_hp", "monster_alive",
@@ -168,10 +165,10 @@ fn run_aram_with_latency(
   for tick in 0..<ticks {
     // --- Game logic (same as aram_bench) ---
     // 1. Spawn monsters
-    let alive_monsters = monsters.iter().filter(fn(m) { m.alive }).fold(
-      init=0,
-      fn(acc, _m) { acc + 1 },
-    )
+    let alive_monsters = monsters
+      .iter()
+      .filter(fn(m) { m.alive })
+      .fold(init=0, fn(acc, _m) { acc + 1 })
     if alive_monsters < 5 && rng.next_bound(10) == 0 {
       let mx = 200 + rng.next_bound(600)
       let mid = "m\{monster_id_counter}"
@@ -298,45 +295,36 @@ fn run_aram_with_latency(
         st.samples += 1
         // Position check
         match cs.get("pos", pid) {
-          Some(entry) => {
+          Some(entry) =>
             match entry.value {
-              Int(view_x) => {
+              Int(view_x) =>
                 if view_x != p.x {
                   st.pos_mismatches += 1
                   st.total_pos_error += int_abs(view_x - p.x)
                 }
-              }
               _ => st.pos_mismatches += 1
             }
-          }
           None => st.pos_mismatches += 1 // no data yet
         }
         // HP check
         match cs.get("hp", pid) {
-          Some(entry) => {
+          Some(entry) =>
             match entry.value {
-              Int(view_hp) => {
-                if view_hp != p.hp {
-                  st.hp_mismatches += 1
-                }
-              }
+              Int(view_hp) => if view_hp != p.hp { st.hp_mismatches += 1 }
               _ => st.hp_mismatches += 1
             }
-          }
           None => st.hp_mismatches += 1
         }
         // Alive check
         match cs.get("alive", pid) {
-          Some(entry) => {
+          Some(entry) =>
             match entry.value {
-              Bool(view_alive) => {
+              Bool(view_alive) =>
                 if view_alive != p.alive {
                   st.alive_mismatches += 1
                 }
-              }
               _ => st.alive_mismatches += 1
             }
-          }
           None => st.alive_mismatches += 1
         }
       }
@@ -373,7 +361,9 @@ test "latency: inconsistency by ping class (500 ticks)" {
   let rng = Rng::new(42)
   let results = run_aram_with_latency(500, rng, [(30, 3), (80, 4), (200, 3)])
   let buf = StringBuilder::new()
-  buf.write_string("=== Latency Inconsistency Report (500 ticks, 10 players) ===\n")
+  buf.write_string(
+    "=== Latency Inconsistency Report (500 ticks, 10 players) ===\n",
+  )
   buf.write_string(
     "ping   | players | pos_err% | avg_pos_err | hp_err%  | alive_err% | samples\n",
   )
@@ -412,7 +402,10 @@ test "latency: inconsistency by ping class (500 ticks)" {
   )
   println(buf.to_string())
   // Sanity: higher ping should have more inconsistencies
-  inspect(results[0].pos_mismatches <= results[2].pos_mismatches, content="true")
+  inspect(
+    results[0].pos_mismatches <= results[2].pos_mismatches,
+    content="true",
+  )
 }
 
 ///|

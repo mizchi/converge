@@ -29,7 +29,7 @@ pub fn EphemeralStore::new() -> EphemeralStore {
 ///|
 fn EphemeralStore::get_or_create_ns(
   self : EphemeralStore,
-  ns : String
+  ns : String,
 ) -> Map[String, EphemeralEntry] {
   match self.data.get(ns) {
     Some(m) => m
@@ -49,7 +49,7 @@ pub fn EphemeralStore::set(
   key : String,
   value : @types.Value,
   timestamp : Double,
-  peer : @types.PeerId
+  peer : @types.PeerId,
 ) -> Unit {
   let ns_map = self.get_or_create_ns(ns)
   ns_map[key] = { value, timestamp, peer }
@@ -60,7 +60,7 @@ pub fn EphemeralStore::set(
 pub fn EphemeralStore::get(
   self : EphemeralStore,
   ns : String,
-  key : String
+  key : String,
 ) -> EphemeralEntry? {
   match self.data.get(ns) {
     Some(ns_map) => ns_map.get(key)
@@ -73,7 +73,7 @@ pub fn EphemeralStore::get(
 /// doesn't exist.
 pub fn EphemeralStore::get_all(
   self : EphemeralStore,
-  ns : String
+  ns : String,
 ) -> Map[String, EphemeralEntry] {
   match self.data.get(ns) {
     Some(ns_map) => ns_map
@@ -92,7 +92,7 @@ pub fn EphemeralStore::merge(
   self : EphemeralStore,
   ns : String,
   key : String,
-  remote : EphemeralEntry
+  remote : EphemeralEntry,
 ) -> Bool {
   let ns_map = self.get_or_create_ns(ns)
   match ns_map.get(key) {
@@ -100,7 +100,7 @@ pub fn EphemeralStore::merge(
       ns_map[key] = remote
       true
     }
-    Some(current) => {
+    Some(current) =>
       if remote.timestamp > current.timestamp {
         ns_map[key] = remote
         true
@@ -111,7 +111,6 @@ pub fn EphemeralStore::merge(
       } else {
         false
       }
-    }
   }
 }
 
@@ -120,7 +119,7 @@ pub fn EphemeralStore::merge(
 pub fn EphemeralStore::remove(
   self : EphemeralStore,
   ns : String,
-  key : String
+  key : String,
 ) -> Unit {
   match self.data.get(ns) {
     Some(ns_map) => ns_map.remove(key)

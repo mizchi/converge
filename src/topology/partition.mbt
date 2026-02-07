@@ -52,9 +52,7 @@ pub fn run_partition(config : PartitionConfig, seed : Int) -> SimResult {
         let ts = tick.to_double()
         for nsi in ns {
           let val = rng.next_bound(1000)
-          node.store.set(
-            nsi, node.id, @types.Value::Int(val), ts, node.peer_id,
-          )
+          node.store.set(nsi, node.id, @types.Value::Int(val), ts, node.peer_id)
         }
       }
     }
@@ -101,10 +99,5 @@ pub fn run_partition(config : PartitionConfig, seed : Int) -> SimResult {
       convergence_tick = tick
     }
   }
-  {
-    topology_name: "partition",
-    convergence_tick,
-    total_messages,
-    per_tick,
-  }
+  { topology_name: "partition", convergence_tick, total_messages, per_tick }
 }

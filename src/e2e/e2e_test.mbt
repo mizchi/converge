@@ -44,7 +44,7 @@ fn SimpleDB::get(
   self : SimpleDB,
   tbl : String,
   row_id : String,
-  col : String
+  col : String,
 ) -> @types.Value? {
   let key = tbl + "\u0000" + row_id
   match self.rows.get(key) {
@@ -62,7 +62,7 @@ fn SimpleDB::has_row(self : SimpleDB, tbl : String, row_id : String) -> Bool {
 ///|
 fn sync_to_server(
   doc : @doc.CrdtDoc,
-  transport : @sync.InMemoryTransport
+  transport : @sync.InMemoryTransport,
 ) -> Unit raise Error {
   let (frontier, versions) = doc.sync_state()
   let pending = doc.get_pending(transport.peer_versions)
@@ -76,12 +76,10 @@ fn sync_to_server(
 fn sync_from_server(
   doc : @doc.CrdtDoc,
   db : SimpleDB,
-  transport : @sync.InMemoryTransport
+  transport : @sync.InMemoryTransport,
 ) -> Unit raise Error {
   let (_, versions) = doc.sync_state()
-  let response = transport.pull(
-    { peer_id: doc.peer_id, known_peers: versions },
-  )
+  let response = transport.pull({ peer_id: doc.peer_id, known_peers: versions })
   if not(response.events.is_empty()) {
     let ops = doc.merge_remote(response.events)
     db.apply_ops(ops)
@@ -92,7 +90,7 @@ fn sync_from_server(
 fn full_sync(
   doc : @doc.CrdtDoc,
   db : SimpleDB,
-  transport : @sync.InMemoryTransport
+  transport : @sync.InMemoryTransport,
 ) -> Unit raise Error {
   sync_to_server(doc, transport)
   sync_from_server(doc, db, transport)
@@ -101,7 +99,6 @@ fn full_sync(
 ///|
 test "e2e: collaborative todo app" {
   let server = @sync.InMemoryTransport::new()
-
   let alice_doc = @doc.CrdtDoc::new(peer_id="alice")
   let alice_db = SimpleDB::new()
   let bob_doc = @doc.CrdtDoc::new(peer_id="bob")
@@ -111,27 +108,17 @@ test "e2e: collaborative todo app" {
 
   // Alice: insert a todo
   ignore(
-    alice_doc.insert(
-      tbl="todos",
-      row_id="t1",
-      values=[
-        ("text", @types.Value::Str("Buy milk")),
-        ("done", @types.Value::Bool(false)),
-      ],
-    ),
+    alice_doc.insert(tbl="todos", row_id="t1", values=[
+      ("text", @types.Value::Str("Buy milk")),
+      ("done", @types.Value::Bool(false)),
+    ]),
   )
-  alice_db.apply_ops(
-    [
-      @merge.MergeOp::InsertRow(
-        tbl="todos",
-        row_id="t1",
-        values=[
-          ("text", @types.Value::Str("Buy milk")),
-          ("done", @types.Value::Bool(false)),
-        ],
-      ),
-    ],
-  )
+  alice_db.apply_ops([
+    @merge.MergeOp::InsertRow(tbl="todos", row_id="t1", values=[
+      ("text", @types.Value::Str("Buy milk")),
+      ("done", @types.Value::Bool(false)),
+    ]),
+  ])
 
   // Alice pushes to server
   full_sync(alice_doc, alice_db, server)
@@ -142,10 +129,7 @@ test "e2e: collaborative todo app" {
     bob_db.get("todos", "t1", "text"),
     Some(@types.Value::Str("Buy milk")),
   )
-  assert_eq(
-    bob_db.get("todos", "t1", "done"),
-    Some(@types.Value::Bool(false)),
-  )
+  assert_eq(bob_db.get("todos", "t1", "done"), Some(@types.Value::Bool(false)))
 
   // Bob: mark done=true, push
   ignore(
@@ -156,16 +140,14 @@ test "e2e: collaborative todo app" {
       value=@types.Value::Bool(true),
     ),
   )
-  bob_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="todos",
-        row_id="t1",
-        col="done",
-        value=@types.Value::Bool(true),
-      ),
-    ],
-  )
+  bob_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="todos",
+      row_id="t1",
+      col="done",
+      value=@types.Value::Bool(true),
+    ),
+  ])
   full_sync(bob_doc, bob_db, server)
 
   // Charlie pulls, updates text, pushes
@@ -182,16 +164,14 @@ test "e2e: collaborative todo app" {
       value=@types.Value::Str("Buy eggs"),
     ),
   )
-  charlie_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="todos",
-        row_id="t1",
-        col="text",
-        value=@types.Value::Str("Buy eggs"),
-      ),
-    ],
-  )
+  charlie_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="todos",
+      row_id="t1",
+      col="text",
+      value=@types.Value::Str("Buy eggs"),
+    ),
+  ])
   full_sync(charlie_doc, charlie_db, server)
 
   // Everyone pulls final state
@@ -213,7 +193,6 @@ test "e2e: collaborative todo app" {
 ///|
 test "e2e: offline editing and reconnect" {
   let server = @sync.InMemoryTransport::new()
-
   let alice_doc = @doc.CrdtDoc::new(peer_id="alice")
   let alice_db = SimpleDB::new()
   let bob_doc = @doc.CrdtDoc::new(peer_id="bob")
@@ -221,27 +200,17 @@ test "e2e: offline editing and reconnect" {
 
   // Initial: Alice inserts, syncs to server, Bob pulls
   ignore(
-    alice_doc.insert(
-      tbl="notes",
-      row_id="n1",
-      values=[
-        ("text", @types.Value::Str("hello")),
-        ("done", @types.Value::Bool(false)),
-      ],
-    ),
+    alice_doc.insert(tbl="notes", row_id="n1", values=[
+      ("text", @types.Value::Str("hello")),
+      ("done", @types.Value::Bool(false)),
+    ]),
   )
-  alice_db.apply_ops(
-    [
-      @merge.MergeOp::InsertRow(
-        tbl="notes",
-        row_id="n1",
-        values=[
-          ("text", @types.Value::Str("hello")),
-          ("done", @types.Value::Bool(false)),
-        ],
-      ),
-    ],
-  )
+  alice_db.apply_ops([
+    @merge.MergeOp::InsertRow(tbl="notes", row_id="n1", values=[
+      ("text", @types.Value::Str("hello")),
+      ("done", @types.Value::Bool(false)),
+    ]),
+  ])
   full_sync(alice_doc, alice_db, server)
   full_sync(bob_doc, bob_db, server)
 
@@ -272,16 +241,14 @@ test "e2e: offline editing and reconnect" {
       value=@types.Value::Str("v3"),
     ),
   )
-  alice_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="notes",
-        row_id="n1",
-        col="text",
-        value=@types.Value::Str("v3"),
-      ),
-    ],
-  )
+  alice_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="notes",
+      row_id="n1",
+      col="text",
+      value=@types.Value::Str("v3"),
+    ),
+  ])
 
   // Bob: update done (different column)
   ignore(
@@ -292,16 +259,14 @@ test "e2e: offline editing and reconnect" {
       value=@types.Value::Bool(true),
     ),
   )
-  bob_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="notes",
-        row_id="n1",
-        col="done",
-        value=@types.Value::Bool(true),
-      ),
-    ],
-  )
+  bob_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="notes",
+      row_id="n1",
+      col="done",
+      value=@types.Value::Bool(true),
+    ),
+  ])
 
   // --- Reconnect: both push, then both pull ---
   sync_to_server(alice_doc, server)
@@ -310,28 +275,15 @@ test "e2e: offline editing and reconnect" {
   sync_from_server(bob_doc, bob_db, server)
 
   // Both changes should be reflected (different columns, no conflict)
-  assert_eq(
-    alice_db.get("notes", "n1", "text"),
-    Some(@types.Value::Str("v3")),
-  )
-  assert_eq(
-    alice_db.get("notes", "n1", "done"),
-    Some(@types.Value::Bool(true)),
-  )
-  assert_eq(
-    bob_db.get("notes", "n1", "text"),
-    Some(@types.Value::Str("v3")),
-  )
-  assert_eq(
-    bob_db.get("notes", "n1", "done"),
-    Some(@types.Value::Bool(true)),
-  )
+  assert_eq(alice_db.get("notes", "n1", "text"), Some(@types.Value::Str("v3")))
+  assert_eq(alice_db.get("notes", "n1", "done"), Some(@types.Value::Bool(true)))
+  assert_eq(bob_db.get("notes", "n1", "text"), Some(@types.Value::Str("v3")))
+  assert_eq(bob_db.get("notes", "n1", "done"), Some(@types.Value::Bool(true)))
 }
 
 ///|
 test "e2e: concurrent same-cell conflict (LWW)" {
   let server = @sync.InMemoryTransport::new()
-
   let alice_doc = @doc.CrdtDoc::new(peer_id="alice")
   let alice_db = SimpleDB::new()
   let bob_doc = @doc.CrdtDoc::new(peer_id="bob")
@@ -341,21 +293,15 @@ test "e2e: concurrent same-cell conflict (LWW)" {
 
   // Alice creates initial row, syncs to all
   ignore(
-    alice_doc.insert(
-      tbl="scores",
-      row_id="s1",
-      values=[("score", @types.Value::Int(0))],
-    ),
+    alice_doc.insert(tbl="scores", row_id="s1", values=[
+      ("score", @types.Value::Int(0)),
+    ]),
   )
-  alice_db.apply_ops(
-    [
-      @merge.MergeOp::InsertRow(
-        tbl="scores",
-        row_id="s1",
-        values=[("score", @types.Value::Int(0))],
-      ),
-    ],
-  )
+  alice_db.apply_ops([
+    @merge.MergeOp::InsertRow(tbl="scores", row_id="s1", values=[
+      ("score", @types.Value::Int(0)),
+    ]),
+  ])
   full_sync(alice_doc, alice_db, server)
   full_sync(bob_doc, bob_db, server)
   full_sync(charlie_doc, charlie_db, server)
@@ -370,16 +316,14 @@ test "e2e: concurrent same-cell conflict (LWW)" {
       value=@types.Value::Int(10),
     ),
   )
-  alice_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="scores",
-        row_id="s1",
-        col="score",
-        value=@types.Value::Int(10),
-      ),
-    ],
-  )
+  alice_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="scores",
+      row_id="s1",
+      col="score",
+      value=@types.Value::Int(10),
+    ),
+  ])
 
   // Bob: 2 ops to bump lamport, final score=20
   ignore(
@@ -398,16 +342,14 @@ test "e2e: concurrent same-cell conflict (LWW)" {
       value=@types.Value::Int(20),
     ),
   )
-  bob_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="scores",
-        row_id="s1",
-        col="score",
-        value=@types.Value::Int(20),
-      ),
-    ],
-  )
+  bob_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="scores",
+      row_id="s1",
+      col="score",
+      value=@types.Value::Int(20),
+    ),
+  ])
 
   // Charlie: 3 ops to get highest lamport, final score=30
   ignore(
@@ -434,16 +376,14 @@ test "e2e: concurrent same-cell conflict (LWW)" {
       value=@types.Value::Int(30),
     ),
   )
-  charlie_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="scores",
-        row_id="s1",
-        col="score",
-        value=@types.Value::Int(30),
-      ),
-    ],
-  )
+  charlie_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="scores",
+      row_id="s1",
+      col="score",
+      value=@types.Value::Int(30),
+    ),
+  ])
 
   // Sync all: push, then pull
   sync_to_server(alice_doc, server)
@@ -465,7 +405,6 @@ test "e2e: network partition and recovery" {
   // Two separate servers simulating a network partition
   let server1 = @sync.InMemoryTransport::new()
   let server2 = @sync.InMemoryTransport::new()
-
   let alice_doc = @doc.CrdtDoc::new(peer_id="alice")
   let alice_db = SimpleDB::new()
   let bob_doc = @doc.CrdtDoc::new(peer_id="bob")
@@ -475,27 +414,17 @@ test "e2e: network partition and recovery" {
 
   // Initial data: Alice inserts, syncs to both servers
   ignore(
-    alice_doc.insert(
-      tbl="items",
-      row_id="i1",
-      values=[
-        ("name", @types.Value::Str("item1")),
-        ("qty", @types.Value::Int(1)),
-      ],
-    ),
+    alice_doc.insert(tbl="items", row_id="i1", values=[
+      ("name", @types.Value::Str("item1")),
+      ("qty", @types.Value::Int(1)),
+    ]),
   )
-  alice_db.apply_ops(
-    [
-      @merge.MergeOp::InsertRow(
-        tbl="items",
-        row_id="i1",
-        values=[
-          ("name", @types.Value::Str("item1")),
-          ("qty", @types.Value::Int(1)),
-        ],
-      ),
-    ],
-  )
+  alice_db.apply_ops([
+    @merge.MergeOp::InsertRow(tbl="items", row_id="i1", values=[
+      ("name", @types.Value::Str("item1")),
+      ("qty", @types.Value::Int(1)),
+    ]),
+  ])
   full_sync(alice_doc, alice_db, server1)
   full_sync(alice_doc, alice_db, server2)
 
@@ -514,16 +443,14 @@ test "e2e: network partition and recovery" {
       value=@types.Value::Str("item1-updated"),
     ),
   )
-  alice_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="items",
-        row_id="i1",
-        col="name",
-        value=@types.Value::Str("item1-updated"),
-      ),
-    ],
-  )
+  alice_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="items",
+      row_id="i1",
+      col="name",
+      value=@types.Value::Str("item1-updated"),
+    ),
+  ])
   full_sync(alice_doc, alice_db, server1)
   full_sync(bob_doc, bob_db, server1)
 
@@ -536,16 +463,14 @@ test "e2e: network partition and recovery" {
       value=@types.Value::Int(10),
     ),
   )
-  charlie_db.apply_ops(
-    [
-      @merge.MergeOp::SetCell(
-        tbl="items",
-        row_id="i1",
-        col="qty",
-        value=@types.Value::Int(10),
-      ),
-    ],
-  )
+  charlie_db.apply_ops([
+    @merge.MergeOp::SetCell(
+      tbl="items",
+      row_id="i1",
+      col="qty",
+      value=@types.Value::Int(10),
+    ),
+  ])
   full_sync(charlie_doc, charlie_db, server2)
 
   // Verify partition state
@@ -558,10 +483,7 @@ test "e2e: network partition and recovery" {
     charlie_db.get("items", "i1", "name"),
     Some(@types.Value::Str("item1")),
   )
-  assert_eq(
-    charlie_db.get("items", "i1", "qty"),
-    Some(@types.Value::Int(10)),
-  )
+  assert_eq(charlie_db.get("items", "i1", "qty"), Some(@types.Value::Int(10)))
 
   // --- Recovery: use a relay doc to bridge server1 <-> server2 ---
   let relay_doc = @doc.CrdtDoc::new(peer_id="relay")
@@ -595,7 +517,6 @@ test "e2e: network partition and recovery" {
 ///|
 test "e2e: bulk insert and sync" {
   let server = @sync.InMemoryTransport::new()
-
   let alice_doc = @doc.CrdtDoc::new(peer_id="alice")
   let alice_db = SimpleDB::new()
   let bob_doc = @doc.CrdtDoc::new(peer_id="bob")
@@ -606,27 +527,17 @@ test "e2e: bulk insert and sync" {
   for i = 0; i < count; i = i + 1 {
     let row_id = "row-" + i.to_string()
     ignore(
-      alice_doc.insert(
-        tbl="bulk",
-        row_id=row_id,
-        values=[
-          ("idx", @types.Value::Int(i)),
-          ("label", @types.Value::Str("item-" + i.to_string())),
-        ],
-      ),
+      alice_doc.insert(tbl="bulk", row_id~, values=[
+        ("idx", @types.Value::Int(i)),
+        ("label", @types.Value::Str("item-" + i.to_string())),
+      ]),
     )
-    alice_db.apply_ops(
-      [
-        @merge.MergeOp::InsertRow(
-          tbl="bulk",
-          row_id=row_id,
-          values=[
-            ("idx", @types.Value::Int(i)),
-            ("label", @types.Value::Str("item-" + i.to_string())),
-          ],
-        ),
-      ],
-    )
+    alice_db.apply_ops([
+      @merge.MergeOp::InsertRow(tbl="bulk", row_id~, values=[
+        ("idx", @types.Value::Int(i)),
+        ("label", @types.Value::Str("item-" + i.to_string())),
+      ]),
+    ])
   }
 
   // Push to server

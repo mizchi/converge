@@ -64,11 +64,7 @@ pub(all) struct SimNode {
 
 ///|
 pub fn SimNode::new(id : String) -> SimNode {
-  {
-    id,
-    peer_id: @types.PeerId(id),
-    store: @ephemeral.EphemeralStore::new(),
-  }
+  { id, peer_id: @types.PeerId(id), store: @ephemeral.EphemeralStore::new() }
 }
 
 // Xorshift32 PRNG (re-implemented to avoid priv access to ephemeral's Rng)
@@ -86,11 +82,15 @@ pub fn Rng::new(seed : Int) -> Rng {
 ///|
 pub fn Rng::next(self : Rng) -> Int {
   let mut x = self.state
-  x = x.lxor(x << 13)
-  x = x.lxor(x >> 17)
-  x = x.lxor(x << 5)
+  x = x ^ (x << 13)
+  x = x ^ (x >> 17)
+  x = x ^ (x << 5)
   self.state = x
-  if x < 0 { -x } else { x }
+  if x < 0 {
+    -x
+  } else {
+    x
+  }
 }
 
 ///|
@@ -124,13 +124,10 @@ pub fn NetPipe::new(ping_ms : Int) -> NetPipe {
 pub fn NetPipe::send_entries(
   self : NetPipe,
   current_tick : Int,
-  entries : Array[(String, String, @ephemeral.EphemeralEntry)]
+  entries : Array[(String, String, @ephemeral.EphemeralEntry)],
 ) -> Unit {
   if entries.length() > 0 {
-    self.queue.push({
-      arrival_tick: current_tick + self.delay_ticks,
-      entries,
-    })
+    self.queue.push({ arrival_tick: current_tick + self.delay_ticks, entries })
   }
 }
 
@@ -140,7 +137,7 @@ pub fn NetPipe::send_snapshot(
   self : NetPipe,
   current_tick : Int,
   src : @ephemeral.EphemeralStore,
-  namespaces : Array[String]
+  namespaces : Array[String],
 ) -> Unit {
   let entries : Array[(String, String, @ephemeral.EphemeralEntry)] = []
   for ns in namespaces {
@@ -157,7 +154,7 @@ pub fn NetPipe::send_snapshot(
 pub fn NetPipe::receive(
   self : NetPipe,
   current_tick : Int,
-  dst : @ephemeral.EphemeralStore
+  dst : @ephemeral.EphemeralStore,
 ) -> Int {
   let mut merged = 0
   let remaining : Array[InFlightPacket] = []

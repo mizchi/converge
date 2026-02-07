@@ -15,11 +15,15 @@ fn Rng::new(seed : Int) -> Rng {
 ///|
 fn Rng::next(self : Rng) -> Int {
   let mut x = self.state
-  x = x.lxor(x << 13)
-  x = x.lxor(x >> 17)
-  x = x.lxor(x << 5)
+  x = x ^ (x << 13)
+  x = x ^ (x >> 17)
+  x = x ^ (x << 5)
   self.state = x
-  if x < 0 { -x } else { x }
+  if x < 0 {
+    -x
+  } else {
+    x
+  }
 }
 
 ///|
@@ -30,22 +34,31 @@ fn Rng::next_bound(self : Rng, bound : Int) -> Int {
 ///|
 let team_size = 5
 
+///|
 let lane_len = 1000
 
+///|
 let max_hp = 100
 
+///|
 let attack_damage = 20
 
+///|
 let attack_range = 50
 
+///|
 let move_speed = 15
 
+///|
 let monster_hp = 60
 
+///|
 let monster_kill_gold = 25
 
+///|
 let player_kill_gold = 50
 
+///|
 let respawn_ticks = 5
 
 ///|
@@ -86,7 +99,7 @@ fn write_player(
   store : EphemeralStore,
   p : PlayerState,
   tick : Int,
-  peer : @types.PeerId
+  peer : @types.PeerId,
 ) -> Unit {
   let ts = tick.to_double()
   let pid = p.id
@@ -101,7 +114,7 @@ fn write_monster(
   store : EphemeralStore,
   m : Monster,
   tick : Int,
-  peer : @types.PeerId
+  peer : @types.PeerId,
 ) -> Unit {
   let ts = tick.to_double()
   store.set("monster_pos", m.id, @types.Value::Int(m.x), ts, peer)
@@ -113,7 +126,7 @@ fn write_monster(
 fn sync_stores(
   src : EphemeralStore,
   dst : EphemeralStore,
-  namespaces : Array[String]
+  namespaces : Array[String],
 ) -> Int {
   let mut merged = 0
   for ns in namespaces {
@@ -129,7 +142,11 @@ fn sync_stores(
 
 ///|
 fn int_abs(x : Int) -> Int {
-  if x < 0 { -x } else { x }
+  if x < 0 {
+    -x
+  } else {
+    x
+  }
 }
 
 ///|
@@ -157,10 +174,10 @@ fn run_aram(ticks : Int, rng : Rng) -> (Int, Int) {
   let mut total_kills = 0
   for tick in 0..<ticks {
     // 1. Spawn monsters (10% chance per tick, max 5 alive)
-    let alive_monsters = monsters.iter().filter(fn(m) { m.alive }).fold(
-      init=0,
-      fn(acc, _m) { acc + 1 },
-    )
+    let alive_monsters = monsters
+      .iter()
+      .filter(fn(m) { m.alive })
+      .fold(init=0, fn(acc, _m) { acc + 1 })
     if alive_monsters < 5 && rng.next_bound(10) == 0 {
       let mx = 200 + rng.next_bound(600)
       let mid = "m\{monster_id_counter}"
