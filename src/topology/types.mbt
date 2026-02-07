@@ -26,6 +26,20 @@ pub(all) struct GossipConfig {
 }
 
 ///|
+pub(all) struct FilteredStarConfig {
+  base : SimConfig
+  subscriptions : Map[Int, Array[String]]
+}
+
+///|
+pub(all) struct PartitionConfig {
+  base : SimConfig
+  partition_at_tick : Int
+  reconnect_at_tick : Int
+  partitioned_peers : Array[Int]
+}
+
+///|
 pub(all) struct TickMetrics {
   tick : Int
   total_messages_sent : Int
