@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/crdt_db/merge"
+package "mizchi/converge/merge"
 
 import {
-  "mizchi/crdt_db/graph",
-  "mizchi/crdt_db/types",
+  "mizchi/converge/graph",
+  "mizchi/converge/types",
 }
 
 // Values

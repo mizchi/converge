@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/ephemeral"
+
+import {
+  "mizchi/converge/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct EphemeralEntry {
+  value : @types.Value
+  timestamp : Double
+  peer : @types.PeerId
+}
+pub impl Eq for EphemeralEntry
+pub impl Show for EphemeralEntry
+
+pub(all) struct EphemeralStore {
+  data : Map[String, Map[String, EphemeralEntry]]
+}
+pub fn EphemeralStore::get(Self, String, String) -> EphemeralEntry?
+pub fn EphemeralStore::get_all(Self, String) -> Map[String, EphemeralEntry]
+pub fn EphemeralStore::merge(Self, String, String, EphemeralEntry) -> Bool
+pub fn EphemeralStore::new() -> Self
+pub fn EphemeralStore::remove(Self, String, String) -> Unit
+pub fn EphemeralStore::set(Self, String, String, @types.Value, Double, @types.PeerId) -> Unit
+
+// Type aliases
+
+// Traits
+

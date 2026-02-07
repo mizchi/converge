@@ -1,0 +1,108 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/topology"
+
+import {
+  "mizchi/converge/ephemeral",
+  "mizchi/converge/types",
+}
+
+// Values
+pub fn collect_entries(@ephemeral.EphemeralStore, Array[String]) -> Array[(String, String, @ephemeral.EphemeralEntry)]
+
+pub fn count_filtered_inconsistent_pairs(Array[SimNode], Map[Int, Array[String]], Array[String]) -> Int
+
+pub fn count_inconsistent_pairs(Array[SimNode], Array[String]) -> Int
+
+pub fn count_total_entries(Array[SimNode], Array[String]) -> Int
+
+pub fn pick_random_targets(Rng, Int, Int, Int) -> Array[Int]
+
+pub fn run_filtered_star(FilteredStarConfig, Int) -> SimResult
+
+pub fn run_gossip(GossipConfig, Int) -> SimResult
+
+pub fn run_mesh(SimConfig, Int) -> SimResult
+
+pub fn run_partition(PartitionConfig, Int) -> SimResult
+
+pub fn run_star(SimConfig, Int) -> SimResult
+
+// Errors
+
+// Types and methods
+pub(all) struct FilteredStarConfig {
+  base : SimConfig
+  subscriptions : Map[Int, Array[String]]
+}
+
+pub(all) struct GossipConfig {
+  base : SimConfig
+  fanout : Int
+  max_hops : Int
+}
+
+type InFlightPacket
+
+pub(all) struct NetPipe {
+  delay_ticks : Int
+  queue : Array[InFlightPacket]
+}
+pub fn NetPipe::new(Int) -> Self
+pub fn NetPipe::receive(Self, Int, @ephemeral.EphemeralStore) -> Int
+pub fn NetPipe::send_entries(Self, Int, Array[(String, String, @ephemeral.EphemeralEntry)]) -> Unit
+pub fn NetPipe::send_snapshot(Self, Int, @ephemeral.EphemeralStore, Array[String]) -> Unit
+
+pub(all) struct PartitionConfig {
+  base : SimConfig
+  partition_at_tick : Int
+  reconnect_at_tick : Int
+  partitioned_peers : Array[Int]
+}
+
+pub(all) struct PingConfig {
+  ping_ms : Int
+  count : Int
+}
+
+pub(all) struct Rng {
+  mut state : Int
+}
+pub fn Rng::new(Int) -> Self
+pub fn Rng::next(Self) -> Int
+pub fn Rng::next_bound(Self, Int) -> Int
+
+pub(all) struct SimConfig {
+  num_peers : Int
+  ticks : Int
+  ping_config : Array[PingConfig]
+  write_interval : Int
+  namespaces : Array[String]
+}
+
+pub(all) struct SimNode {
+  id : String
+  peer_id : @types.PeerId
+  store : @ephemeral.EphemeralStore
+}
+pub fn SimNode::new(String) -> Self
+
+pub(all) struct SimResult {
+  topology_name : String
+  convergence_tick : Int
+  total_messages : Int
+  per_tick : Array[TickMetrics]
+}
+pub impl Show for SimResult
+
+pub(all) struct TickMetrics {
+  tick : Int
+  total_messages_sent : Int
+  inconsistent_pairs : Int
+  total_entries : Int
+}
+pub impl Show for TickMetrics
+
+// Type aliases
+
+// Traits
+

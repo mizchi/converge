@@ -1,12 +1,12 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/crdt_db/doc"
+package "mizchi/converge/doc"
 
 import {
-  "mizchi/crdt_db/clock",
-  "mizchi/crdt_db/graph",
-  "mizchi/crdt_db/merge",
-  "mizchi/crdt_db/oplog",
-  "mizchi/crdt_db/types",
+  "mizchi/converge/clock",
+  "mizchi/converge/graph",
+  "mizchi/converge/merge",
+  "mizchi/converge/oplog",
+  "mizchi/converge/types",
 }
 
 // Values

@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/crdt_db/oplog"
+package "mizchi/converge/oplog"
 
 import {
-  "mizchi/crdt_db/types",
+  "mizchi/converge/types",
 }
 
 // Values

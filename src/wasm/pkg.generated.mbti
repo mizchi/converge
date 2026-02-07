@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "mizchi/crdt_db/wasm"
+package "mizchi/converge/wasm"
 
 // Values
 pub fn create_doc(String) -> Int
@@ -15,6 +15,14 @@ pub fn doc_merge_remote(Int, String) -> String
 pub fn doc_sync_state(Int) -> String
 
 pub fn doc_update(Int, String, String, String, String) -> String
+
+pub fn ephemeral_get(Int, String, String) -> String
+
+pub fn ephemeral_get_all(Int, String) -> String
+
+pub fn ephemeral_merge(Int, String) -> String
+
+pub fn ephemeral_set(Int, String, String, String, Double) -> String
 
 // Errors
 

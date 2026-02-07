@@ -1,0 +1,117 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/bft"
+
+import {
+  "mizchi/converge/types",
+  "moonbitlang/core/builtin",
+}
+
+// Values
+pub fn serialize_for_hash(@types.Event, Array[Digest]) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct BFTAdapter {
+  hasher : &Hasher
+  verifier : &Verifier
+  digest_store : Map[String, Bool]
+  event_digests : Map[String, Digest]
+  pending_buffer : Array[SignedEvent]
+  flushed_events : Array[@types.Event]
+}
+pub fn BFTAdapter::deliver(Self, SignedEvent) -> DeliveryResult
+pub fn BFTAdapter::new(&Hasher, &Verifier) -> Self
+pub fn BFTAdapter::sign(Self, &Signer, @types.Event, Array[Digest]) -> SignedEvent
+pub fn BFTAdapter::take_flushed(Self) -> Array[@types.Event]
+
+pub(all) struct BFTAlert {
+  kind : BFTAlertKind
+  peer : @types.PeerId
+  digest : Digest
+  detail : String
+}
+pub impl Eq for BFTAlert
+pub impl Show for BFTAlert
+
+pub(all) enum BFTAlertKind {
+  Equivocation
+  HashMismatch
+  InvalidSignature
+  MissingDependency
+}
+pub impl Eq for BFTAlertKind
+pub impl Show for BFTAlertKind
+
+pub(all) enum DeliveryResult {
+  Accepted(@types.Event)
+  Buffered
+  Rejected(BFTAlert)
+}
+pub impl Eq for DeliveryResult
+pub impl Show for DeliveryResult
+
+pub(all) struct Digest(String)
+#deprecated
+pub fn Digest::inner(Self) -> String
+pub impl Compare for Digest
+pub impl Eq for Digest
+pub impl Hash for Digest
+pub impl Show for Digest
+
+pub(all) struct FnvHasher {
+}
+pub fn FnvHasher::new() -> Self
+pub impl Hasher for FnvHasher
+
+pub(all) struct MockSigner {
+  secret : String
+  key : PublicKey
+}
+pub fn MockSigner::new(String) -> Self
+pub impl Signer for MockSigner
+
+pub(all) struct MockVerifier {
+  secrets : Map[String, String]
+}
+pub fn MockVerifier::new() -> Self
+pub fn MockVerifier::register(Self, PublicKey) -> Unit
+pub impl Verifier for MockVerifier
+
+pub(all) struct PublicKey(String)
+#deprecated
+pub fn PublicKey::inner(Self) -> String
+pub impl Eq for PublicKey
+pub impl Hash for PublicKey
+pub impl Show for PublicKey
+
+pub(all) struct Signature(String)
+#deprecated
+pub fn Signature::inner(Self) -> String
+pub impl Eq for Signature
+pub impl Show for Signature
+
+pub(all) struct SignedEvent {
+  digest : Digest
+  signature : Signature
+  author_key : PublicKey
+  dep_hashes : Array[Digest]
+  event : @types.Event
+}
+
+// Type aliases
+
+// Traits
+pub(open) trait Hasher {
+  hash_string(Self, String) -> Digest
+}
+
+pub(open) trait Signer {
+  sign(Self, Digest) -> Signature
+  public_key(Self) -> PublicKey
+}
+
+pub(open) trait Verifier {
+  verify(Self, PublicKey, Digest, Signature) -> Bool
+}
+
