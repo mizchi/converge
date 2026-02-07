@@ -1,10 +1,10 @@
 {
   "import": [
-    "mizchi/crdt_db/types",
-    "mizchi/crdt_db/clock",
-    "mizchi/crdt_db/graph",
-    "mizchi/crdt_db/oplog",
-    "mizchi/crdt_db/merge",
+    "mizchi/converge/types",
+    "mizchi/converge/clock",
+    "mizchi/converge/graph",
+    "mizchi/converge/oplog",
+    "mizchi/converge/merge",
     "moonbitlang/core/bench"
   ]
 }

@@ -1,6 +1,6 @@
 {
   "import": [
-    "mizchi/crdt_db/types",
+    "mizchi/converge/types",
     "moonbitlang/core/bench"
   ]
 }

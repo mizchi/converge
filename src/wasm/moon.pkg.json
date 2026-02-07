@@ -1,9 +1,9 @@
 {
   "import": [
-    "mizchi/crdt_db/types",
-    "mizchi/crdt_db/doc",
-    "mizchi/crdt_db/merge",
-    "mizchi/crdt_db/ephemeral",
+    "mizchi/converge/types",
+    "mizchi/converge/doc",
+    "mizchi/converge/merge",
+    "mizchi/converge/ephemeral",
     "moonbitlang/core/json"
   ],
   "supported-targets": ["wasm-gc", "js"],

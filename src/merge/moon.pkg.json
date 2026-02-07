@@ -1,6 +1,6 @@
 {
   "import": [
-    "mizchi/crdt_db/types",
-    "mizchi/crdt_db/graph"
+    "mizchi/converge/types",
+    "mizchi/converge/graph"
   ]
 }

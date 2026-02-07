@@ -1,10 +1,10 @@
 {
-  "name": "mizchi/crdt_db",
-  "version": "0.1.1",
+  "name": "mizchi/converge",
+  "version": "0.1.2",
   "source": "src",
   "readme": "README.mbt.md",
-  "repository": "",
+  "repository": "https://github.com/mizchi/converge",
   "license": "Apache-2.0",
-  "keywords": [],
-  "description": "EG-Walker inspired Local-First DB Sync Engine"
+  "keywords": ["crdt", "local-first", "sync", "eg-walker", "lww"],
+  "description": "CRDT-based local-first sync engine inspired by EG-Walker"
 }
