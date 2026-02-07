@@ -132,7 +132,7 @@ Lightweight alternative using Deno KV for persistence. Supports multi-isolate co
 
 ### Additional Examples
 
-- `examples/cf-do-game/` — Real-time 5v5 game simulation (Ephemeral Layer only, WebSocket)
+- `examples/cf-do-game/` — Multiplayer Vampire Survivors-style browser demo (Ephemeral Layer + DO game loop, WebSocket)
 - `examples/cf-signaling/` — P2P signaling relay with Star/Gossip topology modes (Ephemeral Layer only, WebSocket)
 
 ## License

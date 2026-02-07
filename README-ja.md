@@ -132,7 +132,7 @@ Deno KV を永続化に使う軽量な選択肢。catchUp メカニズムによ�
 
 ### その他の Example
 
-- `examples/cf-do-game/` — リアルタイム 5v5 ゲームシミュレーション（Ephemeral Layer のみ、WebSocket）
+- `examples/cf-do-game/` — マルチプレイ対応 Vampire Survivors 風ブラウザデモ（Ephemeral Layer + DOゲームループ、WebSocket）
 - `examples/cf-signaling/` — Star/Gossip トポロジ切替可能な P2P シグナリングリレー（Ephemeral Layer のみ、WebSocket）
 
 ## License

@@ -1,51 +1,71 @@
-# crdt-db-game: P2P ARAM Simulation
+# converge survivors (Cloudflare DO demo)
 
-ARAM-style 5v5 game simulation using EphemeralStore over WebSocket.
+`converge` の Ephemeral Layer を使った、マルチプレイ可能な Vampire Survivors 風デモです。
 
-## Architecture
+- Durable Object が WebSocket リレー + ゲームループを担当
+- `EphemeralRelay` でプレイヤー入力 (`input_x`, `input_y`, `input_name`, `input_color`) を LWW merge
+- サーバー側で敵スポーン / 自動攻撃 / ダメージ / レベルアップ / リスポーンを処理
+- ブラウザを複数タブ開くだけでマルチプレイ確認可能
 
-```
-┌──────────┐  WS   ┌──────────────────┐  WS   ┌──────────┐
-│ Player 0 │◄─────►│                  │◄─────►│ Player 5 │
-│  30ms    │       │   GameRelay DO   │       │  80ms    │
-├──────────┤       │                  │       ├──────────┤
-│ Player 1 │◄─────►│  EphemeralStore  │◄─────►│ Player 6 │
-│  30ms    │       │  (WASM merge)    │       │  80ms    │
-├──────────┤       │                  │       ├──────────┤
-│ Player 2 │◄─────►│  Broadcast diff  │◄─────►│ Player 7 │
-│  30ms    │       │  to all peers    │       │ 200ms    │
-├──────────┤       │                  │       ├──────────┤
-│ Player 3 │◄─────►│                  │◄─────►│ Player 8 │
-│  80ms    │       │                  │       │ 200ms    │
-├──────────┤       │                  │       ├──────────┤
-│ Player 4 │◄─────►│                  │◄─────►│ Player 9 │
-│  80ms    │       └──────────────────┘       │ 200ms    │
-└──────────┘                                  └──────────┘
-  Team A (spawn x=0)                    Team B (spawn x=1000)
-```
-
-Each player:
-1. Runs local ARAM game logic (movement, combat, respawn)
-2. Sends own state to relay via WebSocket (with artificial latency)
-3. Receives other players' state via broadcast (with artificial latency)
-4. LWW merge resolves any conflicts
-
-## Usage
+## ローカル実行
 
 ```bash
-# Terminal 1: Start relay server
+cd examples/cf-do-game
 pnpm install
 pnpm dev
+```
 
-# Terminal 2: Run simulation
+`pnpm dev` は起動前に `moon build --target js` を自動実行します。
+
+ブラウザで `http://localhost:8787` を開く。
+
+別タブや別ブラウザで同URLを開くと同じルーム (`main`) に参加する。
+
+## 操作
+
+- PC: `WASD` または `矢印キー`
+- Mobile: 画面左側ドラッグで移動
+- 上部で名前/色変更
+
+## 追加アルゴリズム
+
+- 空間ハッシュ（Uniform Grid）でオーラ判定の候補を絞り込み
+- スポーンディレクタ（予算ベース）で時間経過・平均レベルに応じて敵構成を調整
+- 敵アーキタイプ（`grunt` / `runner` / `tank`）を導入
+
+## デバッグ
+
+- クライアント:
+  - URL に `?debug=1` を付けると HUD にサーバー側メトリクス表示
+  - `Backquote` キーで debug 表示を切り替え（再接続）
+- サーバー:
+  - `GET /debug` で現在の world と直近 tick の debug 履歴を取得
+
+## テスト
+
+```bash
+pnpm test
+```
+
+`src/game.ts` の純粋ロジックに対する TDD テストを実行します。
+
+## デプロイ
+
+```bash
+pnpm deploy
+```
+
+## 補足
+
+過去の CLI シミュレーションも残しています。
+
+```bash
 pnpm sim
 ```
 
-## Game Rules
+## トラブルシュート
 
-- 1D lane (0-1000), Team A spawns at x=0, Team B at x=1000
-- Players move toward enemy base (70% forward, 20% stop, 10% backward)
-- Attack range: 50 units, damage: 20/tick
-- Death → respawn after 5 ticks at own base
-- Neutral monsters spawn in center, give 25 gold on kill
-- Player kill gives 50 gold to nearest enemy
+- `Connecting...` から進まない
+  - まず `pnpm dev` のログにエラーが出ていないか確認
+  - 必要なら手動で `pnpm run build:moon` を実行してから再起動
+  - ブラウザは `http://localhost:8787`（wrangler が別ポートを選んだ場合はそのポート）を開く

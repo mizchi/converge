@@ -2,8 +2,12 @@
   "name": "crdt-db-game",
   "private": true,
   "scripts": {
+    "build:moon": "moon build --target js",
+    "predev": "pnpm run build:moon",
+    "predeploy": "pnpm run build:moon",
     "dev": "wrangler dev",
-    "sim": "npx tsx src/sim.ts",
+    "test": "tsx --test src/game.test.ts",
+    "sim": "tsx src/sim.ts",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
