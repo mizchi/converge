@@ -293,6 +293,23 @@ export function renderGameHtml(): string {
       dy: 0,
     };
 
+    globalThis.__convergeGameDebug = {
+      getPeerId: () => peerId,
+      getWorldState: () => worldState,
+      getLocalPosition: () => ({ x: localX, y: localY }),
+      getStatusText: () => statusEl.textContent || "",
+      getConnectAttempts: () => connectAttempts,
+      isDebugMode: () => debugMode,
+      forceReconnect: () => {
+        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+          try { ws.close(); } catch {}
+          return true;
+        }
+        connect();
+        return false;
+      },
+    };
+
     function setStatus(text, online) {
       const mode = debugMode ? " | debug:on" : "";
       const suffix = lastConnError ? " | " + lastConnError : "";

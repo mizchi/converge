@@ -5,15 +5,18 @@
     "build:moon": "moon build --target js",
     "predev": "pnpm run build:moon",
     "predeploy": "pnpm run build:moon",
+    "pretest:e2e": "pnpm run build:moon",
     "dev": "wrangler dev",
     "test": "tsx --test src/game.test.ts",
+    "test:e2e": "playwright test",
     "sim": "tsx src/sim.ts",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0",
     "@cloudflare/workers-types": "^4.20250101.0",
+    "@playwright/test": "^1.58.2",
+    "tsx": "^4.0.0",
     "typescript": "^5.7.0",
-    "tsx": "^4.0.0"
+    "wrangler": "^4.0.0"
   }
 }

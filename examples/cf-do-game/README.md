@@ -49,6 +49,21 @@ pnpm test
 
 `src/game.ts` の純粋ロジックに対する TDD テストを実行します。
 
+E2E（Playwright）:
+
+```bash
+# 初回のみ
+pnpm exec playwright install chromium
+
+# 2クライアント接続 + 移動同期
+pnpm test:e2e
+```
+
+現在の E2E シナリオ:
+
+- 2クライアント同時接続 + 移動同期
+- ページ再読み込み後の再接続 + 移動継続
+
 ## デプロイ
 
 ```bash
