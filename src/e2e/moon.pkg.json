@@ -1,8 +1,0 @@
-{
-  "test-import": [
-    "mizchi/converge/types",
-    "mizchi/converge/doc",
-    "mizchi/converge/sync",
-    "mizchi/converge/merge"
-  ]
-}

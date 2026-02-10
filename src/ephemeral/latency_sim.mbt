@@ -81,7 +81,6 @@ fn NetPipe::receive(
 /// Per-latency-class stats
 priv struct LatencyStats {
   label : String
-  ping_ms : Int
   player_count : Int
   mut pos_mismatches : Int // ticks where position differs from truth
   mut hp_mismatches : Int
@@ -91,14 +90,9 @@ priv struct LatencyStats {
 }
 
 ///|
-fn LatencyStats::new(
-  label : String,
-  ping_ms : Int,
-  player_count : Int,
-) -> LatencyStats {
+fn LatencyStats::new(ping_ms : Int, player_count : Int) -> LatencyStats {
   {
-    label,
-    ping_ms,
+    label: "\{ping_ms}ms",
     player_count,
     pos_mismatches: 0,
     hp_mismatches: 0,
@@ -157,7 +151,7 @@ fn run_aram_with_latency(
   for class_idx, config in ping_config {
     let (ping_ms, count) = config
     ignore(class_idx)
-    stats.push(LatencyStats::new("\{ping_ms}ms", ping_ms, count))
+    stats.push(LatencyStats::new(ping_ms, count))
   }
   // Monsters
   let monsters : Array[Monster] = []
