@@ -1,0 +1,29 @@
+# converge component justfile
+
+wasm := "_build/wasm/release/build/impl/impl.wasm"
+out := "converge-component.wasm"
+
+# Build wasm, embed WIT, create component
+build:
+  moon build --target wasm --release
+  wasm-tools component embed wit/world.wit {{wasm}} --world converge-world -o /tmp/converge-embedded.wasm
+  wasm-tools component new /tmp/converge-embedded.wasm -o {{out}}
+
+# Regenerate bindings from WIT (requires moon-component CLI)
+generate mc="moon-component":
+  {{mc}} wit/world.wit --out-dir . --impl-dir impl
+
+# Transpile component to JS for testing
+transpile: build
+  npx jco transpile {{out}} -o test/gen
+
+# Run Node.js test
+test: transpile
+  node test/test.mjs
+
+# Inspect component WIT
+wit: build
+  wasm-tools component wit {{out}}
+
+# Full rebuild: generate + build + test
+all mc="moon-component": (generate mc) test
