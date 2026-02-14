@@ -85,6 +85,34 @@ ephemeral_get_all(handle, ns)
 ephemeral_merge(handle, entries_json)
 ```
 
+## WebAssembly Component
+
+The `component/` directory provides a [WebAssembly Component Model](https://component-model.bytecodealliance.org/) package with WIT-typed interfaces. No JSON serialization — all types are defined in WIT and use the canonical ABI directly.
+
+```bash
+cd component
+just build    # Build .wasm component
+just test     # Build + jco transpile + Node.js test
+```
+
+Usage with jco (JavaScript):
+
+```js
+import { converge } from './gen/converge-component.js';
+
+const handle = converge.createDoc("peer-A");
+converge.docInsert(handle, "users", "row1", [
+  { key: "name", val: { tag: "val-str", val: "Alice" } },
+  { key: "age",  val: { tag: "val-int", val: 30 } },
+]);
+
+const h2 = converge.createDoc("peer-B");
+const pending = converge.docGetPending(handle, []);
+const ops = converge.docMergeRemote(h2, pending);
+```
+
+See [component/README.md](component/README.md) for full API reference and type definitions.
+
 ## BFT Layer (Byzantine Fault Tolerance)
 
 Verification layer based on Kleppmann's "Making CRDTs Byzantine Fault Tolerant" (PaPoC 2022) for cheat detection in P2P environments. Sits on top of the existing Durable Layer as an adapter without modifying it.
