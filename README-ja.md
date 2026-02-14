@@ -85,6 +85,34 @@ ephemeral_get_all(handle, ns)
 ephemeral_merge(handle, entries_json)
 ```
 
+## WebAssembly Component
+
+`component/` ディレクトリに [WebAssembly Component Model](https://component-model.bytecodealliance.org/) パッケージを提供。WIT で全型を定義しており、JSON シリアライズ不要で canonical ABI を直接使用する。
+
+```bash
+cd component
+just build    # .wasm コンポーネントをビルド
+just test     # ビルド + jco transpile + Node.js テスト
+```
+
+jco (JavaScript) での使用例:
+
+```js
+import { converge } from './gen/converge-component.js';
+
+const handle = converge.createDoc("peer-A");
+converge.docInsert(handle, "users", "row1", [
+  { key: "name", val: { tag: "val-str", val: "Alice" } },
+  { key: "age",  val: { tag: "val-int", val: 30 } },
+]);
+
+const h2 = converge.createDoc("peer-B");
+const pending = converge.docGetPending(handle, []);
+const ops = converge.docMergeRemote(h2, pending);
+```
+
+API リファレンスと型定義の詳細は [component/README.md](component/README.md) を参照。
+
 ## BFT Layer (Byzantine Fault Tolerance)
 
 P2P 環境でのチート検出のため、Kleppmann の "Making CRDTs Byzantine Fault Tolerant" (PaPoC 2022) に基づく検証レイヤー。既存の Durable Layer を変更せず、アダプターとして上に乗る設計。
