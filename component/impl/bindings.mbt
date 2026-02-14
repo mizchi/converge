@@ -143,7 +143,7 @@ pub fn wasmExportDocDelete(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
   let tbl = @cabi.cabi_lift_string(tbl_ptr, tbl_len)
   let row_id = @cabi.cabi_lift_string(row_id_ptr, row_id_len)
   let result = doc_delete(handle.reinterpret_as_uint(), tbl, row_id)
-  let retptr = @cabi.cabi_realloc(0, 0, 4, 64)
+  let retptr = @cabi.cabi_realloc(0, 0, 4, 72)
   // Lower record to linear memory
       let (str_ptr, str_len) = @cabi.cabi_lower_string(result.id.peer)
       @cabi.cabi_write_i32(retptr + 0, str_ptr)
@@ -164,15 +164,15 @@ pub fn wasmExportDocDelete(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
       @cabi.cabi_write_i32(retptr + 20, result.lamport)
       match result.op {
         Insert(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 0)
+          @cabi.cabi_write_u8(retptr + 24, (0).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
           let len = payload.values.length()
-          let elem_size = 20
+          let elem_size = 24
           let ptr = @cabi.cabi_realloc(0, 0, 8, len * elem_size)
           for i, elem in payload.values {
             let elem_ptr = ptr + i * elem_size
@@ -180,71 +180,71 @@ pub fn wasmExportDocDelete(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
     @cabi.cabi_write_i32(elem_ptr, str_ptr)
     @cabi.cabi_write_i32(elem_ptr + 4, str_len)
     match elem.val {
-      ValNull => @cabi.cabi_write_i32(elem_ptr + 8, 0)
+      ValNull => @cabi.cabi_write_u8(elem_ptr + 8, (0).to_byte())
       ValBool(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 1)
-        @cabi.cabi_write_u8(elem_ptr + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+        @cabi.cabi_write_u8(elem_ptr + 8, (1).to_byte())
+        @cabi.cabi_write_u8(elem_ptr + 8 + 8, if payload { b'\x01' } else { b'\x00' })
       }
       ValInt(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 2)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (2).to_byte())
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, payload)
       }
       ValFloat(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 3)
-        @cabi.cabi_write_f64(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (3).to_byte())
+        @cabi.cabi_write_f64(elem_ptr + 8 + 8, payload)
       }
       ValStr(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 4)
+        @cabi.cabi_write_u8(elem_ptr + 8, (4).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
           }
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16, ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16 + 4, len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16, ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16 + 4, len)
         }
         Update(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 1)
+          @cabi.cabi_write_u8(retptr + 24, (1).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.col)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16 + 4, str_len)
           match payload.val {
-            ValNull => @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 0)
+            ValNull => @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (0).to_byte())
             ValBool(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 1)
-              @cabi.cabi_write_u8(retptr + 24 + 4 + 24 + 4, if payload { b'\x01' } else { b'\x00' })
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (1).to_byte())
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24 + 8, if payload { b'\x01' } else { b'\x00' })
             }
             ValInt(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 2)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4, payload)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (2).to_byte())
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8, payload)
             }
             ValFloat(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 3)
-              @cabi.cabi_write_f64(retptr + 24 + 4 + 24 + 4, payload)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (3).to_byte())
+              @cabi.cabi_write_f64(retptr + 24 + 8 + 24 + 8, payload)
             }
             ValStr(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 4)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (4).to_byte())
               let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4, str_ptr)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4 + 4, str_len)
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8, str_ptr)
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8 + 4, str_len)
             }
           }
         }
         Delete(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 2)
+          @cabi.cabi_write_u8(retptr + 24, (2).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
         }
       }
   retptr
@@ -284,21 +284,21 @@ pub fn wasmExportDocGetPending(handle : Int, known_ptr : Int, known_len : Int) -
     @cabi.cabi_write_i32(elem_ptr + 16, ptr)
     @cabi.cabi_write_i32(elem_ptr + 16 + 4, len)
     let len = elem.ops.length()
-    let elem_size = 40
+    let elem_size = 48
     let ptr = @cabi.cabi_realloc(0, 0, 8, len * elem_size)
     for i, elem in elem.ops {
       let elem_ptr = ptr + i * elem_size
     match elem {
       Insert(payload) => {
-        @cabi.cabi_write_i32(elem_ptr, 0)
+        @cabi.cabi_write_u8(elem_ptr, (0).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-        @cabi.cabi_write_i32(elem_ptr + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
         let len = payload.values.length()
-        let elem_size = 20
+        let elem_size = 24
         let ptr = @cabi.cabi_realloc(0, 0, 8, len * elem_size)
         for i, elem in payload.values {
           let elem_ptr = ptr + i * elem_size
@@ -306,71 +306,71 @@ pub fn wasmExportDocGetPending(handle : Int, known_ptr : Int, known_len : Int) -
     @cabi.cabi_write_i32(elem_ptr, str_ptr)
     @cabi.cabi_write_i32(elem_ptr + 4, str_len)
     match elem.val {
-      ValNull => @cabi.cabi_write_i32(elem_ptr + 8, 0)
+      ValNull => @cabi.cabi_write_u8(elem_ptr + 8, (0).to_byte())
       ValBool(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 1)
-        @cabi.cabi_write_u8(elem_ptr + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+        @cabi.cabi_write_u8(elem_ptr + 8, (1).to_byte())
+        @cabi.cabi_write_u8(elem_ptr + 8 + 8, if payload { b'\x01' } else { b'\x00' })
       }
       ValInt(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 2)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (2).to_byte())
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, payload)
       }
       ValFloat(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 3)
-        @cabi.cabi_write_f64(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (3).to_byte())
+        @cabi.cabi_write_f64(elem_ptr + 8 + 8, payload)
       }
       ValStr(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 4)
+        @cabi.cabi_write_u8(elem_ptr + 8, (4).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
         }
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16, ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16 + 4, len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16, ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16 + 4, len)
       }
       Update(payload) => {
-        @cabi.cabi_write_i32(elem_ptr, 1)
+        @cabi.cabi_write_u8(elem_ptr, (1).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-        @cabi.cabi_write_i32(elem_ptr + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.col)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16 + 4, str_len)
         match payload.val {
-          ValNull => @cabi.cabi_write_i32(elem_ptr + 4 + 24, 0)
+          ValNull => @cabi.cabi_write_u8(elem_ptr + 8 + 24, (0).to_byte())
           ValBool(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 1)
-            @cabi.cabi_write_u8(elem_ptr + 4 + 24 + 4, if payload { b'\x01' } else { b'\x00' })
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (1).to_byte())
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24 + 8, if payload { b'\x01' } else { b'\x00' })
           }
           ValInt(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 2)
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24 + 4, payload)
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (2).to_byte())
+            @cabi.cabi_write_i32(elem_ptr + 8 + 24 + 8, payload)
           }
           ValFloat(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 3)
-            @cabi.cabi_write_f64(elem_ptr + 4 + 24 + 4, payload)
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (3).to_byte())
+            @cabi.cabi_write_f64(elem_ptr + 8 + 24 + 8, payload)
           }
           ValStr(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 4)
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (4).to_byte())
             let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24 + 4, str_ptr)
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24 + 4 + 4, str_len)
+            @cabi.cabi_write_i32(elem_ptr + 8 + 24 + 8, str_ptr)
+            @cabi.cabi_write_i32(elem_ptr + 8 + 24 + 8 + 4, str_len)
           }
         }
       }
       Delete(payload) => {
-        @cabi.cabi_write_i32(elem_ptr, 2)
+        @cabi.cabi_write_u8(elem_ptr, (2).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-        @cabi.cabi_write_i32(elem_ptr + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
     }
@@ -389,20 +389,20 @@ pub fn wasmExportDocInsert(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
   let values : Array[KeyValue] = {
     let arr : Array[KeyValue] = Array::new(capacity=values_len)
     for i = 0; i < values_len; i = i + 1 {
-      let elem_ptr = values_ptr + i * 20
-      arr.push(({ key: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 0), @cabi.cabi_read_i32(elem_ptr + 0 + 4)), val: (match @cabi.cabi_read_i32(elem_ptr + 8) {
+      let elem_ptr = values_ptr + i * 24
+      arr.push(({ key: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 0), @cabi.cabi_read_i32(elem_ptr + 0 + 4)), val: (match @cabi.cabi_read_u8(elem_ptr + 8).to_int() {
         0 => ValNull
-        1 => ValBool(@cabi.cabi_read_u8(elem_ptr + 8 + 4) != b'\x00')
-        2 => ValInt(@cabi.cabi_read_i32(elem_ptr + 8 + 4))
-        3 => ValFloat(@cabi.cabi_read_f64(elem_ptr + 8 + 4))
-        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 8 + 4), @cabi.cabi_read_i32(elem_ptr + 8 + 4 + 4)))
+        1 => ValBool(@cabi.cabi_read_u8(elem_ptr + 8 + 8) != b'\x00')
+        2 => ValInt(@cabi.cabi_read_i32(elem_ptr + 8 + 8))
+        3 => ValFloat(@cabi.cabi_read_f64(elem_ptr + 8 + 8))
+        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 8 + 8), @cabi.cabi_read_i32(elem_ptr + 8 + 8 + 4)))
         _ => abort("invalid variant discriminant")
       } : Value) } : KeyValue))
     }
     arr
   }
   let result = doc_insert(handle.reinterpret_as_uint(), tbl, row_id, values)
-  let retptr = @cabi.cabi_realloc(0, 0, 4, 64)
+  let retptr = @cabi.cabi_realloc(0, 0, 4, 72)
   // Lower record to linear memory
       let (str_ptr, str_len) = @cabi.cabi_lower_string(result.id.peer)
       @cabi.cabi_write_i32(retptr + 0, str_ptr)
@@ -423,15 +423,15 @@ pub fn wasmExportDocInsert(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
       @cabi.cabi_write_i32(retptr + 20, result.lamport)
       match result.op {
         Insert(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 0)
+          @cabi.cabi_write_u8(retptr + 24, (0).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
           let len = payload.values.length()
-          let elem_size = 20
+          let elem_size = 24
           let ptr = @cabi.cabi_realloc(0, 0, 8, len * elem_size)
           for i, elem in payload.values {
             let elem_ptr = ptr + i * elem_size
@@ -439,71 +439,71 @@ pub fn wasmExportDocInsert(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
     @cabi.cabi_write_i32(elem_ptr, str_ptr)
     @cabi.cabi_write_i32(elem_ptr + 4, str_len)
     match elem.val {
-      ValNull => @cabi.cabi_write_i32(elem_ptr + 8, 0)
+      ValNull => @cabi.cabi_write_u8(elem_ptr + 8, (0).to_byte())
       ValBool(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 1)
-        @cabi.cabi_write_u8(elem_ptr + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+        @cabi.cabi_write_u8(elem_ptr + 8, (1).to_byte())
+        @cabi.cabi_write_u8(elem_ptr + 8 + 8, if payload { b'\x01' } else { b'\x00' })
       }
       ValInt(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 2)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (2).to_byte())
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, payload)
       }
       ValFloat(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 3)
-        @cabi.cabi_write_f64(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (3).to_byte())
+        @cabi.cabi_write_f64(elem_ptr + 8 + 8, payload)
       }
       ValStr(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 4)
+        @cabi.cabi_write_u8(elem_ptr + 8, (4).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
           }
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16, ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16 + 4, len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16, ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16 + 4, len)
         }
         Update(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 1)
+          @cabi.cabi_write_u8(retptr + 24, (1).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.col)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16 + 4, str_len)
           match payload.val {
-            ValNull => @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 0)
+            ValNull => @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (0).to_byte())
             ValBool(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 1)
-              @cabi.cabi_write_u8(retptr + 24 + 4 + 24 + 4, if payload { b'\x01' } else { b'\x00' })
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (1).to_byte())
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24 + 8, if payload { b'\x01' } else { b'\x00' })
             }
             ValInt(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 2)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4, payload)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (2).to_byte())
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8, payload)
             }
             ValFloat(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 3)
-              @cabi.cabi_write_f64(retptr + 24 + 4 + 24 + 4, payload)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (3).to_byte())
+              @cabi.cabi_write_f64(retptr + 24 + 8 + 24 + 8, payload)
             }
             ValStr(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 4)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (4).to_byte())
               let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4, str_ptr)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4 + 4, str_len)
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8, str_ptr)
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8 + 4, str_len)
             }
           }
         }
         Delete(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 2)
+          @cabi.cabi_write_u8(retptr + 24, (2).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
         }
       }
   retptr
@@ -514,80 +514,80 @@ pub fn wasmExportDocMergeRemote(handle : Int, events_ptr : Int, events_len : Int
     let arr : Array[EventRun] = Array::new(capacity=events_len)
     for i = 0; i < events_len; i = i + 1 {
       let elem_ptr = events_ptr + i * 32
-      arr.push(({ peer: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 0), @cabi.cabi_read_i32(elem_ptr + 0 + 4)), counter_start: @cabi.cabi_read_i32(elem_ptr + 8), lamport_start: @cabi.cabi_read_i32(elem_ptr + 12), deps: ({ let list_ptr = @cabi.cabi_read_i32(elem_ptr + 16); let list_len = @cabi.cabi_read_i32(elem_ptr + 16 + 4); let arr : Array[EventId] = Array::new(capacity=list_len); for i = 0; i < list_len; i = i + 1 { arr.push(({ peer: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 12 + 0), @cabi.cabi_read_i32(list_ptr + i * 12 + 0 + 4)), counter: @cabi.cabi_read_i32(list_ptr + i * 12 + 8) } : EventId)) }; arr }), ops: ({ let list_ptr = @cabi.cabi_read_i32(elem_ptr + 24); let list_len = @cabi.cabi_read_i32(elem_ptr + 24 + 4); let arr : Array[RowOp] = Array::new(capacity=list_len); for i = 0; i < list_len; i = i + 1 { arr.push((match @cabi.cabi_read_i32(list_ptr + i * 40) {
-        0 => Insert(({ tbl: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 0), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 0 + 4)), row_id: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 8), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 8 + 4)), values: ({ let list_ptr = @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 16); let list_len = @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 16 + 4); let arr : Array[KeyValue] = Array::new(capacity=list_len); for i = 0; i < list_len; i = i + 1 { arr.push(({ key: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 20 + 0), @cabi.cabi_read_i32(list_ptr + i * 20 + 0 + 4)), val: (match @cabi.cabi_read_i32(list_ptr + i * 20 + 8) {
+      arr.push(({ peer: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 0), @cabi.cabi_read_i32(elem_ptr + 0 + 4)), counter_start: @cabi.cabi_read_i32(elem_ptr + 8), lamport_start: @cabi.cabi_read_i32(elem_ptr + 12), deps: ({ let lp0 = @cabi.cabi_read_i32(elem_ptr + 16); let ll0 = @cabi.cabi_read_i32(elem_ptr + 16 + 4); let la0 : Array[EventId] = Array::new(capacity=ll0); for li0 = 0; li0 < ll0; li0 = li0 + 1 { la0.push(({ peer: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 12 + 0), @cabi.cabi_read_i32(lp0 + li0 * 12 + 0 + 4)), counter: @cabi.cabi_read_i32(lp0 + li0 * 12 + 8) } : EventId)) }; la0 }), ops: ({ let lp0 = @cabi.cabi_read_i32(elem_ptr + 24); let ll0 = @cabi.cabi_read_i32(elem_ptr + 24 + 4); let la0 : Array[RowOp] = Array::new(capacity=ll0); for li0 = 0; li0 < ll0; li0 = li0 + 1 { la0.push((match @cabi.cabi_read_u8(lp0 + li0 * 48).to_int() {
+        0 => Insert(({ tbl: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 0), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 0 + 4)), row_id: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 8), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 8 + 4)), values: ({ let lp1 = @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 16); let ll1 = @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 16 + 4); let la1 : Array[KeyValue] = Array::new(capacity=ll1); for li1 = 0; li1 < ll1; li1 = li1 + 1 { la1.push(({ key: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp1 + li1 * 24 + 0), @cabi.cabi_read_i32(lp1 + li1 * 24 + 0 + 4)), val: (match @cabi.cabi_read_u8(lp1 + li1 * 24 + 8).to_int() {
         0 => ValNull
-        1 => ValBool(@cabi.cabi_read_u8(list_ptr + i * 20 + 8 + 4) != b'\x00')
-        2 => ValInt(@cabi.cabi_read_i32(list_ptr + i * 20 + 8 + 4))
-        3 => ValFloat(@cabi.cabi_read_f64(list_ptr + i * 20 + 8 + 4))
-        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 20 + 8 + 4), @cabi.cabi_read_i32(list_ptr + i * 20 + 8 + 4 + 4)))
+        1 => ValBool(@cabi.cabi_read_u8(lp1 + li1 * 24 + 8 + 8) != b'\x00')
+        2 => ValInt(@cabi.cabi_read_i32(lp1 + li1 * 24 + 8 + 8))
+        3 => ValFloat(@cabi.cabi_read_f64(lp1 + li1 * 24 + 8 + 8))
+        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(lp1 + li1 * 24 + 8 + 8), @cabi.cabi_read_i32(lp1 + li1 * 24 + 8 + 8 + 4)))
         _ => abort("invalid variant discriminant")
-      } : Value) } : KeyValue)) }; arr }) } : InsertOp))
-        1 => Update(({ tbl: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 0), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 0 + 4)), row_id: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 8), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 8 + 4)), col: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 16), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 16 + 4)), val: (match @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 24) {
+      } : Value) } : KeyValue)) }; la1 }) } : InsertOp))
+        1 => Update(({ tbl: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 0), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 0 + 4)), row_id: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 8), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 8 + 4)), col: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 16), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 16 + 4)), val: (match @cabi.cabi_read_u8(lp0 + li0 * 48 + 8 + 24).to_int() {
         0 => ValNull
-        1 => ValBool(@cabi.cabi_read_u8(list_ptr + i * 40 + 4 + 24 + 4) != b'\x00')
-        2 => ValInt(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 24 + 4))
-        3 => ValFloat(@cabi.cabi_read_f64(list_ptr + i * 40 + 4 + 24 + 4))
-        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 24 + 4), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 24 + 4 + 4)))
+        1 => ValBool(@cabi.cabi_read_u8(lp0 + li0 * 48 + 8 + 24 + 8) != b'\x00')
+        2 => ValInt(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 24 + 8))
+        3 => ValFloat(@cabi.cabi_read_f64(lp0 + li0 * 48 + 8 + 24 + 8))
+        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 24 + 8), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 24 + 8 + 4)))
         _ => abort("invalid variant discriminant")
       } : Value) } : UpdateOp))
-        2 => Delete(({ tbl: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 0), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 0 + 4)), row_id: @cabi.cabi_lift_string(@cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 8), @cabi.cabi_read_i32(list_ptr + i * 40 + 4 + 8 + 4)) } : DeleteOp))
+        2 => Delete(({ tbl: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 0), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 0 + 4)), row_id: @cabi.cabi_lift_string(@cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 8), @cabi.cabi_read_i32(lp0 + li0 * 48 + 8 + 8 + 4)) } : DeleteOp))
         _ => abort("invalid variant discriminant")
-      } : RowOp)) }; arr }) } : EventRun))
+      } : RowOp)) }; la0 }) } : EventRun))
     }
     arr
   }
   let result = doc_merge_remote(handle.reinterpret_as_uint(), events)
   // Lower list to linear memory
   let len = result.length()
-  let elem_size = 40
+  let elem_size = 48
   let ptr = @cabi.cabi_realloc(0, 0, 8, len * elem_size)
   for i, elem in result {
     let elem_ptr = ptr + i * elem_size
     match elem {
       SetCell(payload) => {
-        @cabi.cabi_write_i32(elem_ptr, 0)
+        @cabi.cabi_write_u8(elem_ptr, (0).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-        @cabi.cabi_write_i32(elem_ptr + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.col)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16 + 4, str_len)
         match payload.val {
-          ValNull => @cabi.cabi_write_i32(elem_ptr + 4 + 24, 0)
+          ValNull => @cabi.cabi_write_u8(elem_ptr + 8 + 24, (0).to_byte())
           ValBool(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 1)
-            @cabi.cabi_write_u8(elem_ptr + 4 + 24 + 4, if payload { b'\x01' } else { b'\x00' })
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (1).to_byte())
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24 + 8, if payload { b'\x01' } else { b'\x00' })
           }
           ValInt(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 2)
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24 + 4, payload)
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (2).to_byte())
+            @cabi.cabi_write_i32(elem_ptr + 8 + 24 + 8, payload)
           }
           ValFloat(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 3)
-            @cabi.cabi_write_f64(elem_ptr + 4 + 24 + 4, payload)
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (3).to_byte())
+            @cabi.cabi_write_f64(elem_ptr + 8 + 24 + 8, payload)
           }
           ValStr(payload) => {
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24, 4)
+            @cabi.cabi_write_u8(elem_ptr + 8 + 24, (4).to_byte())
             let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24 + 4, str_ptr)
-            @cabi.cabi_write_i32(elem_ptr + 4 + 24 + 4 + 4, str_len)
+            @cabi.cabi_write_i32(elem_ptr + 8 + 24 + 8, str_ptr)
+            @cabi.cabi_write_i32(elem_ptr + 8 + 24 + 8 + 4, str_len)
           }
         }
       }
       InsertRow(payload) => {
-        @cabi.cabi_write_i32(elem_ptr, 1)
+        @cabi.cabi_write_u8(elem_ptr, (1).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-        @cabi.cabi_write_i32(elem_ptr + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
         let len = payload.values.length()
-        let elem_size = 20
+        let elem_size = 24
         let ptr = @cabi.cabi_realloc(0, 0, 8, len * elem_size)
         for i, elem in payload.values {
           let elem_ptr = ptr + i * elem_size
@@ -595,38 +595,38 @@ pub fn wasmExportDocMergeRemote(handle : Int, events_ptr : Int, events_len : Int
     @cabi.cabi_write_i32(elem_ptr, str_ptr)
     @cabi.cabi_write_i32(elem_ptr + 4, str_len)
     match elem.val {
-      ValNull => @cabi.cabi_write_i32(elem_ptr + 8, 0)
+      ValNull => @cabi.cabi_write_u8(elem_ptr + 8, (0).to_byte())
       ValBool(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 1)
-        @cabi.cabi_write_u8(elem_ptr + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+        @cabi.cabi_write_u8(elem_ptr + 8, (1).to_byte())
+        @cabi.cabi_write_u8(elem_ptr + 8 + 8, if payload { b'\x01' } else { b'\x00' })
       }
       ValInt(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 2)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (2).to_byte())
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, payload)
       }
       ValFloat(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 3)
-        @cabi.cabi_write_f64(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (3).to_byte())
+        @cabi.cabi_write_f64(elem_ptr + 8 + 8, payload)
       }
       ValStr(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 4)
+        @cabi.cabi_write_u8(elem_ptr + 8, (4).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
         }
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16, ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 16 + 4, len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16, ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 16 + 4, len)
       }
       DeleteRow(payload) => {
-        @cabi.cabi_write_i32(elem_ptr, 2)
+        @cabi.cabi_write_u8(elem_ptr, (2).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-        @cabi.cabi_write_i32(elem_ptr + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_len)
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 4 + 8 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
   }
@@ -680,7 +680,7 @@ pub fn wasmExportDocUpdate(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
     _ => abort("invalid variant discriminant")
   }
   let result = doc_update(handle.reinterpret_as_uint(), tbl, row_id, col, val)
-  let retptr = @cabi.cabi_realloc(0, 0, 4, 64)
+  let retptr = @cabi.cabi_realloc(0, 0, 4, 72)
   // Lower record to linear memory
       let (str_ptr, str_len) = @cabi.cabi_lower_string(result.id.peer)
       @cabi.cabi_write_i32(retptr + 0, str_ptr)
@@ -701,15 +701,15 @@ pub fn wasmExportDocUpdate(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
       @cabi.cabi_write_i32(retptr + 20, result.lamport)
       match result.op {
         Insert(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 0)
+          @cabi.cabi_write_u8(retptr + 24, (0).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
           let len = payload.values.length()
-          let elem_size = 20
+          let elem_size = 24
           let ptr = @cabi.cabi_realloc(0, 0, 8, len * elem_size)
           for i, elem in payload.values {
             let elem_ptr = ptr + i * elem_size
@@ -717,71 +717,71 @@ pub fn wasmExportDocUpdate(handle : Int, tbl_ptr : Int, tbl_len : Int, row_id_pt
     @cabi.cabi_write_i32(elem_ptr, str_ptr)
     @cabi.cabi_write_i32(elem_ptr + 4, str_len)
     match elem.val {
-      ValNull => @cabi.cabi_write_i32(elem_ptr + 8, 0)
+      ValNull => @cabi.cabi_write_u8(elem_ptr + 8, (0).to_byte())
       ValBool(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 1)
-        @cabi.cabi_write_u8(elem_ptr + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+        @cabi.cabi_write_u8(elem_ptr + 8, (1).to_byte())
+        @cabi.cabi_write_u8(elem_ptr + 8 + 8, if payload { b'\x01' } else { b'\x00' })
       }
       ValInt(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 2)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (2).to_byte())
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, payload)
       }
       ValFloat(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 3)
-        @cabi.cabi_write_f64(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (3).to_byte())
+        @cabi.cabi_write_f64(elem_ptr + 8 + 8, payload)
       }
       ValStr(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 4)
+        @cabi.cabi_write_u8(elem_ptr + 8, (4).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
           }
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16, ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16 + 4, len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16, ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16 + 4, len)
         }
         Update(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 1)
+          @cabi.cabi_write_u8(retptr + 24, (1).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.col)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 16 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 16 + 4, str_len)
           match payload.val {
-            ValNull => @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 0)
+            ValNull => @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (0).to_byte())
             ValBool(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 1)
-              @cabi.cabi_write_u8(retptr + 24 + 4 + 24 + 4, if payload { b'\x01' } else { b'\x00' })
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (1).to_byte())
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24 + 8, if payload { b'\x01' } else { b'\x00' })
             }
             ValInt(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 2)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4, payload)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (2).to_byte())
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8, payload)
             }
             ValFloat(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 3)
-              @cabi.cabi_write_f64(retptr + 24 + 4 + 24 + 4, payload)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (3).to_byte())
+              @cabi.cabi_write_f64(retptr + 24 + 8 + 24 + 8, payload)
             }
             ValStr(payload) => {
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24, 4)
+              @cabi.cabi_write_u8(retptr + 24 + 8 + 24, (4).to_byte())
               let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4, str_ptr)
-              @cabi.cabi_write_i32(retptr + 24 + 4 + 24 + 4 + 4, str_len)
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8, str_ptr)
+              @cabi.cabi_write_i32(retptr + 24 + 8 + 24 + 8 + 4, str_len)
             }
           }
         }
         Delete(payload) => {
-          @cabi.cabi_write_i32(retptr + 24, 2)
+          @cabi.cabi_write_u8(retptr + 24, (2).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.tbl)
-          @cabi.cabi_write_i32(retptr + 24 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 4, str_len)
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload.row_id)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8, str_ptr)
-          @cabi.cabi_write_i32(retptr + 24 + 4 + 8 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 24 + 8 + 8 + 4, str_len)
         }
       }
   retptr
@@ -791,40 +791,40 @@ pub fn wasmExportEphemeralGet(handle : Int, ns_ptr : Int, ns_len : Int, key_ptr 
   let ns = @cabi.cabi_lift_string(ns_ptr, ns_len)
   let key = @cabi.cabi_lift_string(key_ptr, key_len)
   let result = ephemeral_get(handle.reinterpret_as_uint(), ns, key)
-  let retptr = @cabi.cabi_realloc(0, 0, 4, 4 + 40)
+  let retptr = @cabi.cabi_realloc(0, 0, 8, 48)
   match result {
     Some(val) => {
-      @cabi.cabi_write_i32(retptr, 1) // discriminant: Some
+      @cabi.cabi_write_u8(retptr, (1).to_byte()) // discriminant: Some
       let (str_ptr, str_len) = @cabi.cabi_lower_string(val.key)
-      @cabi.cabi_write_i32(retptr + 4, str_ptr)
-      @cabi.cabi_write_i32(retptr + 4 + 4, str_len)
+      @cabi.cabi_write_i32(retptr + 8, str_ptr)
+      @cabi.cabi_write_i32(retptr + 8 + 4, str_len)
       match val.val {
-        ValNull => @cabi.cabi_write_i32(retptr + 4 + 8, 0)
+        ValNull => @cabi.cabi_write_u8(retptr + 8 + 8, (0).to_byte())
         ValBool(payload) => {
-          @cabi.cabi_write_i32(retptr + 4 + 8, 1)
-          @cabi.cabi_write_u8(retptr + 4 + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+          @cabi.cabi_write_u8(retptr + 8 + 8, (1).to_byte())
+          @cabi.cabi_write_u8(retptr + 8 + 8 + 8, if payload { b'\x01' } else { b'\x00' })
         }
         ValInt(payload) => {
-          @cabi.cabi_write_i32(retptr + 4 + 8, 2)
-          @cabi.cabi_write_i32(retptr + 4 + 8 + 4, payload)
+          @cabi.cabi_write_u8(retptr + 8 + 8, (2).to_byte())
+          @cabi.cabi_write_i32(retptr + 8 + 8 + 8, payload)
         }
         ValFloat(payload) => {
-          @cabi.cabi_write_i32(retptr + 4 + 8, 3)
-          @cabi.cabi_write_f64(retptr + 4 + 8 + 4, payload)
+          @cabi.cabi_write_u8(retptr + 8 + 8, (3).to_byte())
+          @cabi.cabi_write_f64(retptr + 8 + 8 + 8, payload)
         }
         ValStr(payload) => {
-          @cabi.cabi_write_i32(retptr + 4 + 8, 4)
+          @cabi.cabi_write_u8(retptr + 8 + 8, (4).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-          @cabi.cabi_write_i32(retptr + 4 + 8 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 4 + 8 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 8 + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 8 + 8 + 8 + 4, str_len)
         }
       }
-      @cabi.cabi_write_f64(retptr + 4 + 24, val.timestamp)
+      @cabi.cabi_write_f64(retptr + 8 + 24, val.timestamp)
       let (str_ptr, str_len) = @cabi.cabi_lower_string(val.peer)
-      @cabi.cabi_write_i32(retptr + 4 + 32, str_ptr)
-      @cabi.cabi_write_i32(retptr + 4 + 32 + 4, str_len)
+      @cabi.cabi_write_i32(retptr + 8 + 32, str_ptr)
+      @cabi.cabi_write_i32(retptr + 8 + 32 + 4, str_len)
     }
-    None => @cabi.cabi_write_i32(retptr, 0) // discriminant: None
+    None => @cabi.cabi_write_u8(retptr, (0).to_byte()) // discriminant: None
   }
   retptr
 }
@@ -842,24 +842,24 @@ pub fn wasmExportEphemeralGetAll(handle : Int, ns_ptr : Int, ns_len : Int) -> In
     @cabi.cabi_write_i32(elem_ptr, str_ptr)
     @cabi.cabi_write_i32(elem_ptr + 4, str_len)
     match elem.val {
-      ValNull => @cabi.cabi_write_i32(elem_ptr + 8, 0)
+      ValNull => @cabi.cabi_write_u8(elem_ptr + 8, (0).to_byte())
       ValBool(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 1)
-        @cabi.cabi_write_u8(elem_ptr + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+        @cabi.cabi_write_u8(elem_ptr + 8, (1).to_byte())
+        @cabi.cabi_write_u8(elem_ptr + 8 + 8, if payload { b'\x01' } else { b'\x00' })
       }
       ValInt(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 2)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (2).to_byte())
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, payload)
       }
       ValFloat(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 3)
-        @cabi.cabi_write_f64(elem_ptr + 8 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 8, (3).to_byte())
+        @cabi.cabi_write_f64(elem_ptr + 8 + 8, payload)
       }
       ValStr(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 8, 4)
+        @cabi.cabi_write_u8(elem_ptr + 8, (4).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 8 + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 8 + 8 + 4, str_len)
       }
     }
     @cabi.cabi_write_f64(elem_ptr + 24, elem.timestamp)
@@ -878,14 +878,14 @@ pub fn wasmExportEphemeralMerge(handle : Int, entries_ptr : Int, entries_len : I
     let arr : Array[EphemeralRemoteEntry] = Array::new(capacity=entries_len)
     for i = 0; i < entries_len; i = i + 1 {
       let elem_ptr = entries_ptr + i * 48
-      arr.push(({ ns: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 0), @cabi.cabi_read_i32(elem_ptr + 0 + 4)), key: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 8), @cabi.cabi_read_i32(elem_ptr + 8 + 4)), val: (match @cabi.cabi_read_i32(elem_ptr + 16) {
+      arr.push(({ ns: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 0), @cabi.cabi_read_i32(elem_ptr + 0 + 4)), key: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 8), @cabi.cabi_read_i32(elem_ptr + 8 + 4)), val: (match @cabi.cabi_read_u8(elem_ptr + 16).to_int() {
         0 => ValNull
-        1 => ValBool(@cabi.cabi_read_u8(elem_ptr + 16 + 4) != b'\x00')
-        2 => ValInt(@cabi.cabi_read_i32(elem_ptr + 16 + 4))
-        3 => ValFloat(@cabi.cabi_read_f64(elem_ptr + 16 + 4))
-        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 16 + 4), @cabi.cabi_read_i32(elem_ptr + 16 + 4 + 4)))
+        1 => ValBool(@cabi.cabi_read_u8(elem_ptr + 16 + 8) != b'\x00')
+        2 => ValInt(@cabi.cabi_read_i32(elem_ptr + 16 + 8))
+        3 => ValFloat(@cabi.cabi_read_f64(elem_ptr + 16 + 8))
+        4 => ValStr(@cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 16 + 8), @cabi.cabi_read_i32(elem_ptr + 16 + 8 + 4)))
         _ => abort("invalid variant discriminant")
-      } : Value), timestamp: @cabi.cabi_read_f64(elem_ptr + 28), peer: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 40), @cabi.cabi_read_i32(elem_ptr + 40 + 4)) } : EphemeralRemoteEntry))
+      } : Value), timestamp: @cabi.cabi_read_f64(elem_ptr + 32), peer: @cabi.cabi_lift_string(@cabi.cabi_read_i32(elem_ptr + 40), @cabi.cabi_read_i32(elem_ptr + 40 + 4)) } : EphemeralRemoteEntry))
     }
     arr
   }
@@ -903,24 +903,24 @@ pub fn wasmExportEphemeralMerge(handle : Int, entries_ptr : Int, entries_len : I
     @cabi.cabi_write_i32(elem_ptr + 8, str_ptr)
     @cabi.cabi_write_i32(elem_ptr + 8 + 4, str_len)
     match elem.val {
-      ValNull => @cabi.cabi_write_i32(elem_ptr + 16, 0)
+      ValNull => @cabi.cabi_write_u8(elem_ptr + 16, (0).to_byte())
       ValBool(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 16, 1)
-        @cabi.cabi_write_u8(elem_ptr + 16 + 4, if payload { b'\x01' } else { b'\x00' })
+        @cabi.cabi_write_u8(elem_ptr + 16, (1).to_byte())
+        @cabi.cabi_write_u8(elem_ptr + 16 + 8, if payload { b'\x01' } else { b'\x00' })
       }
       ValInt(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 16, 2)
-        @cabi.cabi_write_i32(elem_ptr + 16 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 16, (2).to_byte())
+        @cabi.cabi_write_i32(elem_ptr + 16 + 8, payload)
       }
       ValFloat(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 16, 3)
-        @cabi.cabi_write_f64(elem_ptr + 16 + 4, payload)
+        @cabi.cabi_write_u8(elem_ptr + 16, (3).to_byte())
+        @cabi.cabi_write_f64(elem_ptr + 16 + 8, payload)
       }
       ValStr(payload) => {
-        @cabi.cabi_write_i32(elem_ptr + 16, 4)
+        @cabi.cabi_write_u8(elem_ptr + 16, (4).to_byte())
         let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-        @cabi.cabi_write_i32(elem_ptr + 16 + 4, str_ptr)
-        @cabi.cabi_write_i32(elem_ptr + 16 + 4 + 4, str_len)
+        @cabi.cabi_write_i32(elem_ptr + 16 + 8, str_ptr)
+        @cabi.cabi_write_i32(elem_ptr + 16 + 8 + 4, str_len)
       }
     }
     @cabi.cabi_write_f64(elem_ptr + 32, elem.timestamp)
@@ -946,36 +946,36 @@ pub fn wasmExportEphemeralSet(handle : Int, ns_ptr : Int, ns_len : Int, key_ptr 
     _ => abort("invalid variant discriminant")
   }
   let result = ephemeral_set(handle.reinterpret_as_uint(), ns, key, val, timestamp)
-  let retptr = @cabi.cabi_realloc(0, 0, 4, 36)
+  let retptr = @cabi.cabi_realloc(0, 0, 4, 40)
   // Lower record to linear memory
       let (str_ptr, str_len) = @cabi.cabi_lower_string(result.key)
       @cabi.cabi_write_i32(retptr + 0, str_ptr)
       @cabi.cabi_write_i32(retptr + 0 + 4, str_len)
       match result.val {
-        ValNull => @cabi.cabi_write_i32(retptr + 8, 0)
+        ValNull => @cabi.cabi_write_u8(retptr + 8, (0).to_byte())
         ValBool(payload) => {
-          @cabi.cabi_write_i32(retptr + 8, 1)
-          @cabi.cabi_write_u8(retptr + 8 + 4, if payload { b'\x01' } else { b'\x00' })
+          @cabi.cabi_write_u8(retptr + 8, (1).to_byte())
+          @cabi.cabi_write_u8(retptr + 8 + 8, if payload { b'\x01' } else { b'\x00' })
         }
         ValInt(payload) => {
-          @cabi.cabi_write_i32(retptr + 8, 2)
-          @cabi.cabi_write_i32(retptr + 8 + 4, payload)
+          @cabi.cabi_write_u8(retptr + 8, (2).to_byte())
+          @cabi.cabi_write_i32(retptr + 8 + 8, payload)
         }
         ValFloat(payload) => {
-          @cabi.cabi_write_i32(retptr + 8, 3)
-          @cabi.cabi_write_f64(retptr + 8 + 4, payload)
+          @cabi.cabi_write_u8(retptr + 8, (3).to_byte())
+          @cabi.cabi_write_f64(retptr + 8 + 8, payload)
         }
         ValStr(payload) => {
-          @cabi.cabi_write_i32(retptr + 8, 4)
+          @cabi.cabi_write_u8(retptr + 8, (4).to_byte())
           let (str_ptr, str_len) = @cabi.cabi_lower_string(payload)
-          @cabi.cabi_write_i32(retptr + 8 + 4, str_ptr)
-          @cabi.cabi_write_i32(retptr + 8 + 4 + 4, str_len)
+          @cabi.cabi_write_i32(retptr + 8 + 8, str_ptr)
+          @cabi.cabi_write_i32(retptr + 8 + 8 + 4, str_len)
         }
       }
-      @cabi.cabi_write_f64(retptr + 20, result.timestamp)
+      @cabi.cabi_write_f64(retptr + 24, result.timestamp)
       let (str_ptr, str_len) = @cabi.cabi_lower_string(result.peer)
-      @cabi.cabi_write_i32(retptr + 28, str_ptr)
-      @cabi.cabi_write_i32(retptr + 28 + 4, str_len)
+      @cabi.cabi_write_i32(retptr + 32, str_ptr)
+      @cabi.cabi_write_i32(retptr + 32 + 4, str_len)
   retptr
 }
 
