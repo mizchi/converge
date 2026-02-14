@@ -1,0 +1,60 @@
+package mizchi:converge@0.1.0;
+
+interface converge {
+    // -- Value types --
+    variant value {
+        val-null,
+        val-bool(bool),
+        val-int(s32),
+        val-float(f64),
+        val-str(string),
+    }
+    record key-value { key: string, val: value }
+    record event-id { peer: string, counter: s32 }
+
+    // -- Row operations --
+    record insert-op { tbl: string, row-id: string, values: list<key-value> }
+    record update-op { tbl: string, row-id: string, col: string, val: value }
+    record delete-op { tbl: string, row-id: string }
+    variant row-op { insert(insert-op), update(update-op), delete(delete-op) }
+
+    // -- Events --
+    record event { id: event-id, deps: list<event-id>, lamport: s32, op: row-op }
+    record event-run {
+        peer: string, counter-start: s32, lamport-start: s32,
+        deps: list<event-id>, ops: list<row-op>,
+    }
+
+    // -- Merge operations --
+    record set-cell-op { tbl: string, row-id: string, col: string, val: value }
+    record insert-row-op { tbl: string, row-id: string, values: list<key-value> }
+    record delete-row-op { tbl: string, row-id: string }
+    variant merge-op { set-cell(set-cell-op), insert-row(insert-row-op), delete-row(delete-row-op) }
+
+    // -- Sync --
+    record peer-version { peer: string, version: s32 }
+    record sync-state { frontier: list<event-id>, versions: list<peer-version> }
+
+    // -- Ephemeral --
+    record ephemeral-entry { key: string, val: value, timestamp: f64, peer: string }
+    record ephemeral-remote-entry { ns: string, key: string, val: value, timestamp: f64, peer: string }
+
+    // -- Durable Layer API --
+    create-doc: func(peer-id: string) -> u32;
+    doc-insert: func(handle: u32, tbl: string, row-id: string, values: list<key-value>) -> event;
+    doc-update: func(handle: u32, tbl: string, row-id: string, col: string, val: value) -> event;
+    doc-delete: func(handle: u32, tbl: string, row-id: string) -> event;
+    doc-merge-remote: func(handle: u32, events: list<event-run>) -> list<merge-op>;
+    doc-get-pending: func(handle: u32, known: list<peer-version>) -> list<event-run>;
+    doc-sync-state: func(handle: u32) -> sync-state;
+
+    // -- Ephemeral Layer API --
+    ephemeral-set: func(handle: u32, ns: string, key: string, val: value, timestamp: f64) -> ephemeral-entry;
+    ephemeral-get: func(handle: u32, ns: string, key: string) -> option<ephemeral-entry>;
+    ephemeral-get-all: func(handle: u32, ns: string) -> list<ephemeral-entry>;
+    ephemeral-merge: func(handle: u32, entries: list<ephemeral-remote-entry>) -> list<ephemeral-remote-entry>;
+}
+
+world converge-world {
+    export converge;
+}

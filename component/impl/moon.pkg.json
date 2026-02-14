@@ -1,0 +1,46 @@
+{
+  "is-main": true,
+  "import": [
+    { "path": "converge/gen/cabi", "alias": "cabi" },
+    { "path": "mizchi/converge/types", "alias": "types" },
+    { "path": "mizchi/converge/doc", "alias": "doc" },
+    { "path": "mizchi/converge/merge", "alias": "merge" },
+    { "path": "mizchi/converge/ephemeral", "alias": "ephemeral" }
+  ],
+  "link": {
+    "wasm": {
+      "exports": [
+        "cabi_realloc:cabi_realloc",
+        "wasmExportCreateDoc:mizchi:converge/converge@0.1.0#create-doc",
+        "wasmExportDocDelete:mizchi:converge/converge@0.1.0#doc-delete",
+        "wasmExportDocGetPending:mizchi:converge/converge@0.1.0#doc-get-pending",
+        "wasmExportDocInsert:mizchi:converge/converge@0.1.0#doc-insert",
+        "wasmExportDocMergeRemote:mizchi:converge/converge@0.1.0#doc-merge-remote",
+        "wasmExportDocSyncState:mizchi:converge/converge@0.1.0#doc-sync-state",
+        "wasmExportDocUpdate:mizchi:converge/converge@0.1.0#doc-update",
+        "wasmExportEphemeralGet:mizchi:converge/converge@0.1.0#ephemeral-get",
+        "wasmExportEphemeralGetAll:mizchi:converge/converge@0.1.0#ephemeral-get-all",
+        "wasmExportEphemeralMerge:mizchi:converge/converge@0.1.0#ephemeral-merge",
+        "wasmExportEphemeralSet:mizchi:converge/converge@0.1.0#ephemeral-set"
+      ],
+      "export-memory-name": "memory"
+    },
+    "wasm-gc": {
+      "exports": [
+        "cabi_realloc:cabi_realloc",
+        "wasmExportCreateDoc:mizchi:converge/converge@0.1.0#create-doc",
+        "wasmExportDocDelete:mizchi:converge/converge@0.1.0#doc-delete",
+        "wasmExportDocGetPending:mizchi:converge/converge@0.1.0#doc-get-pending",
+        "wasmExportDocInsert:mizchi:converge/converge@0.1.0#doc-insert",
+        "wasmExportDocMergeRemote:mizchi:converge/converge@0.1.0#doc-merge-remote",
+        "wasmExportDocSyncState:mizchi:converge/converge@0.1.0#doc-sync-state",
+        "wasmExportDocUpdate:mizchi:converge/converge@0.1.0#doc-update",
+        "wasmExportEphemeralGet:mizchi:converge/converge@0.1.0#ephemeral-get",
+        "wasmExportEphemeralGetAll:mizchi:converge/converge@0.1.0#ephemeral-get-all",
+        "wasmExportEphemeralMerge:mizchi:converge/converge@0.1.0#ephemeral-merge",
+        "wasmExportEphemeralSet:mizchi:converge/converge@0.1.0#ephemeral-set"
+      ],
+      "export-memory-name": "memory"
+    }
+  }
+}
