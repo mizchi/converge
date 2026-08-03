@@ -4,11 +4,11 @@ test "set and get" {
   let peer = @types.PeerId("alice")
   store.set("players", "p1", @types.Value::Str("hello"), 1.0, peer)
   let entry = store.get("players", "p1")
-  inspect(not(entry is None), content="true")
+  inspect(!(entry is None), content="true")
   let e = entry.unwrap()
-  inspect(e.value, content="Str(\"hello\")")
+  debug_inspect(e.value, content="Str(\"hello\")")
   inspect(e.timestamp, content="1")
-  inspect(e.peer, content="PeerId(\"alice\")")
+  debug_inspect(e.peer, content="PeerId(\"alice\")")
 }
 
 ///|
@@ -48,8 +48,8 @@ test "merge: newer timestamp wins" {
   })
   inspect(changed, content="true")
   let e = store.get("pos", "x").unwrap()
-  inspect(e.value, content="Int(20)")
-  inspect(e.peer, content="PeerId(\"bob\")")
+  debug_inspect(e.value, content="Int(20)")
+  debug_inspect(e.peer, content="PeerId(\"bob\")")
 }
 
 ///|
@@ -65,7 +65,7 @@ test "merge: older timestamp loses" {
   })
   inspect(changed, content="false")
   let e = store.get("pos", "x").unwrap()
-  inspect(e.value, content="Int(10)")
+  debug_inspect(e.value, content="Int(10)")
 }
 
 ///|
@@ -81,8 +81,8 @@ test "merge: same timestamp, peer_id tiebreak (z > a wins)" {
   })
   inspect(changed, content="true")
   let e = store.get("pos", "x").unwrap()
-  inspect(e.value, content="Int(20)")
-  inspect(e.peer, content="PeerId(\"zzz\")")
+  debug_inspect(e.value, content="Int(20)")
+  debug_inspect(e.peer, content="PeerId(\"zzz\")")
 }
 
 ///|
@@ -98,7 +98,7 @@ test "merge: same timestamp, peer_id tiebreak (a < z loses)" {
   })
   inspect(changed, content="false")
   let e = store.get("pos", "x").unwrap()
-  inspect(e.value, content="Int(10)")
+  debug_inspect(e.value, content="Int(10)")
 }
 
 ///|
@@ -112,7 +112,7 @@ test "merge into empty store" {
   })
   inspect(changed, content="true")
   let e = store.get("pos", "x").unwrap()
-  inspect(e.value, content="Int(42)")
+  debug_inspect(e.value, content="Int(42)")
 }
 
 ///|
@@ -138,6 +138,6 @@ test "overwrite with set" {
   store.set("pos", "x", @types.Value::Int(10), 1.0, alice)
   store.set("pos", "x", @types.Value::Int(99), 2.0, alice)
   let e = store.get("pos", "x").unwrap()
-  inspect(e.value, content="Int(99)")
+  debug_inspect(e.value, content="Int(99)")
   inspect(e.timestamp, content="2")
 }

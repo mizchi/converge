@@ -45,7 +45,7 @@ pub(all) struct TickMetrics {
   total_messages_sent : Int
   inconsistent_pairs : Int
   total_entries : Int
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct SimResult {
@@ -53,7 +53,7 @@ pub(all) struct SimResult {
   convergence_tick : Int // first tick where all peers agree (-1 if never)
   total_messages : Int
   per_tick : Array[TickMetrics]
-} derive(Show)
+} derive(Debug)
 
 ///|
 pub(all) struct SimNode {

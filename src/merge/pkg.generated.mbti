@@ -4,6 +4,7 @@ package "mizchi/converge/merge"
 import {
   "mizchi/converge/graph",
   "mizchi/converge/types",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -16,17 +17,13 @@ pub fn resolve_lww(@types.Event, @types.Event) -> @types.Event
 // Errors
 
 // Types and methods
-type ConflictKey
-pub impl Eq for ConflictKey
-pub impl Hash for ConflictKey
+type ConflictKey derive(Eq, Hash)
 
 pub(all) enum MergeOp {
   SetCell(tbl~ : String, row_id~ : String, col~ : String, value~ : @types.Value)
   InsertRow(tbl~ : String, row_id~ : String, values~ : Array[(String, @types.Value)])
   DeleteRow(tbl~ : String, row_id~ : String)
-}
-pub impl Eq for MergeOp
-pub impl Show for MergeOp
+} derive(Eq, @debug.Debug)
 
 // Type aliases
 

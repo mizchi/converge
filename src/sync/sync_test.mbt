@@ -33,13 +33,13 @@ test "InMemoryTransport: push and pull" {
   // Pull from empty known state
   let response = transport.pull({
     peer_id: @types.PeerId("bob"),
-    known_peers: Map::new(),
+    known_peers: Map([]),
   })
   let expanded = @oplog.expand(response.events)
   assert_eq(expanded.length(), 2)
 
   // Pull with known state (already seen counter 0)
-  let known : Map[@types.PeerId, Int] = Map::new()
+  let known : Map[@types.PeerId, Int] = Map([])
   known[peer] = 0
   let response2 = transport.pull({
     peer_id: @types.PeerId("bob"),
@@ -128,7 +128,7 @@ test "InMemoryTransport: multi-peer scenario" {
   // Third peer pulls everything
   let response = transport.pull({
     peer_id: @types.PeerId("charlie"),
-    known_peers: Map::new(),
+    known_peers: Map([]),
   })
   let expanded = @oplog.expand(response.events)
   assert_eq(expanded.length(), 2)

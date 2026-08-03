@@ -9,8 +9,8 @@ pub fn EventGraph::find_lca(
   if a.is_empty() || b.is_empty() {
     return []
   }
-  let seen_a : Map[@types.EventId, Bool] = Map::new()
-  let seen_b : Map[@types.EventId, Bool] = Map::new()
+  let seen_a : Map[@types.EventId, Bool] = Map([])
+  let seen_b : Map[@types.EventId, Bool] = Map([])
   let queue_a : Array[@types.EventId] = a.copy()
   let queue_b : Array[@types.EventId] = b.copy()
   let mut head_a = 0
@@ -22,21 +22,21 @@ pub fn EventGraph::find_lca(
     seen_b[id] = true
   }
   let result : Array[@types.EventId] = []
-  let found : Map[@types.EventId, Bool] = Map::new()
+  let found : Map[@types.EventId, Bool] = Map([])
   // BFS both sides alternately
   while head_a < queue_a.length() || head_b < queue_b.length() {
     // Process queue_a
     if head_a < queue_a.length() {
       let id = queue_a[head_a]
       head_a += 1
-      if seen_b.get(id).unwrap_or(false) && not(found.get(id).unwrap_or(false)) {
+      if seen_b.get(id).unwrap_or(false) && !found.get(id).unwrap_or(false) {
         found[id] = true
         result.push(id)
       } else {
         match self.events.get(id) {
           Some(event) =>
             for dep in event.deps {
-              if not(seen_a.get(dep).unwrap_or(false)) {
+              if !seen_a.get(dep).unwrap_or(false) {
                 seen_a[dep] = true
                 queue_a.push(dep)
               }
@@ -49,14 +49,14 @@ pub fn EventGraph::find_lca(
     if head_b < queue_b.length() {
       let id = queue_b[head_b]
       head_b += 1
-      if seen_a.get(id).unwrap_or(false) && not(found.get(id).unwrap_or(false)) {
+      if seen_a.get(id).unwrap_or(false) && !found.get(id).unwrap_or(false) {
         found[id] = true
         result.push(id)
       } else {
         match self.events.get(id) {
           Some(event) =>
             for dep in event.deps {
-              if not(seen_b.get(dep).unwrap_or(false)) {
+              if !seen_b.get(dep).unwrap_or(false) {
                 seen_b[dep] = true
                 queue_b.push(dep)
               }
@@ -75,12 +75,12 @@ pub fn EventGraph::events_since(
   self : EventGraph,
   since : Array[@types.EventId],
 ) -> Array[@types.Event] {
-  let since_set : Map[@types.EventId, Bool] = Map::new()
+  let since_set : Map[@types.EventId, Bool] = Map([])
   for id in since {
     since_set[id] = true
   }
   let result : Array[@types.Event] = []
-  let visited : Map[@types.EventId, Bool] = Map::new()
+  let visited : Map[@types.EventId, Bool] = Map([])
   // Collect all events reachable from frontier that are after `since`
   let queue : Array[@types.EventId] = self.frontier.copy()
   let mut head = 0
@@ -98,7 +98,7 @@ pub fn EventGraph::events_since(
       Some(event) => {
         result.push(event)
         for dep in event.deps {
-          if not(visited.get(dep).unwrap_or(false)) {
+          if !visited.get(dep).unwrap_or(false) {
             queue.push(dep)
           }
         }

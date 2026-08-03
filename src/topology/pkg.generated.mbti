@@ -4,6 +4,7 @@ package "mizchi/converge/topology"
 import {
   "mizchi/converge/ephemeral",
   "mizchi/converge/types",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -91,16 +92,14 @@ pub(all) struct SimResult {
   convergence_tick : Int
   total_messages : Int
   per_tick : Array[TickMetrics]
-}
-pub impl Show for SimResult
+} derive(@debug.Debug)
 
 pub(all) struct TickMetrics {
   tick : Int
   total_messages_sent : Int
   inconsistent_pairs : Int
   total_entries : Int
-}
-pub impl Show for TickMetrics
+} derive(@debug.Debug)
 
 // Type aliases
 

@@ -3,6 +3,7 @@ package "mizchi/converge/sync"
 
 import {
   "mizchi/converge/types",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -21,28 +22,25 @@ pub impl SyncTransport for InMemoryTransport
 pub(all) struct PullRequest {
   peer_id : @types.PeerId
   known_peers : Map[@types.PeerId, Int]
-}
-pub impl Show for PullRequest
+} derive(@debug.Debug)
 
 pub(all) struct PullResponse {
   events : Array[@types.EventRun]
   server_frontier : Array[@types.EventId]
   has_more : Bool
-}
-pub impl Show for PullResponse
+} derive(@debug.Debug)
 
 pub(all) struct PushRequest {
   peer_id : @types.PeerId
   events : Array[@types.EventRun]
   frontier : Array[@types.EventId]
-}
-pub impl Show for PushRequest
+} derive(@debug.Debug)
 
 // Type aliases
 
 // Traits
 pub(open) trait SyncTransport {
-  push(Self, PushRequest) -> Unit raise
-  pull(Self, PullRequest) -> PullResponse raise
+  fn push(Self, PushRequest) -> Unit raise
+  fn pull(Self, PullRequest) -> PullResponse raise
 }
 

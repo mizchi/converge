@@ -2,7 +2,7 @@
 /// Unique identifier for a peer (node) in the distributed system.
 /// Used in both the Durable Layer (event authorship) and the Ephemeral Layer
 /// (LWW tiebreaking).
-pub(all) struct PeerId(String) derive(Eq, Compare, Hash, Show)
+pub(all) struct PeerId(String) derive(Eq, Compare, Hash, Debug)
 
 ///|
 /// Globally unique event identifier: (peer, counter) pair.
@@ -10,7 +10,7 @@ pub(all) struct PeerId(String) derive(Eq, Compare, Hash, Show)
 pub(all) struct EventId {
   peer : PeerId
   counter : Int
-} derive(Eq, Compare, Hash, Show)
+} derive(Eq, Compare, Hash, Debug)
 
 ///|
 /// Lightweight JSON-like value for DB cell contents.
@@ -22,7 +22,7 @@ pub(all) enum Value {
   Int(Int)
   Float(Double)
   Str(String)
-} derive(Eq, Show)
+} derive(Eq, Debug)
 
 ///|
 /// Row-level operation in the Durable Layer.
@@ -32,7 +32,7 @@ pub(all) enum RowOp {
   Insert(tbl~ : String, row_id~ : String, values~ : Array[(String, Value)])
   Update(tbl~ : String, row_id~ : String, col~ : String, value~ : Value)
   Delete(tbl~ : String, row_id~ : String)
-} derive(Show, Eq)
+} derive(Eq, Debug)
 
 ///|
 /// A single event in the causal event graph (Durable Layer).
@@ -43,7 +43,7 @@ pub(all) struct Event {
   deps : Array[EventId]
   lamport : Int
   op : RowOp
-} derive(Show, Eq)
+} derive(Eq, Debug)
 
 ///|
 /// Run-length encoded consecutive events from the same peer.
@@ -56,4 +56,4 @@ pub(all) struct EventRun {
   lamport_start : Int
   deps : Array[EventId]
   ops : Array[RowOp]
-} derive(Show, Eq)
+} derive(Eq, Debug)

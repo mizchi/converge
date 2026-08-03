@@ -1,0 +1,15 @@
+name = "mizchi/converge"
+
+version = "0.2.0"
+
+readme = "README.md"
+
+repository = "https://github.com/mizchi/converge"
+
+license = "Apache-2.0"
+
+keywords = [ "crdt", "local-first", "sync", "eg-walker", "lww" ]
+
+description = "CRDT-based local-first sync engine inspired by EG-Walker"
+
+source = "src"

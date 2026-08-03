@@ -6,6 +6,8 @@ import {
   "moonbitlang/core/json",
 }
 
+supported_targets = "+js+wasm-gc"
+
 options(
   link: {
     "js": {
@@ -40,5 +42,4 @@ options(
       "use-js-builtin-string": true,
     },
   },
-  "supported-targets": [ "wasm-gc", "js" ],
 )

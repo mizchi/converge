@@ -1,14 +1,14 @@
 ///|
 /// Trait for signing digests. Implementations can range from mock HMAC to Ed25519.
 pub(open) trait Signer {
-  sign(Self, Digest) -> Signature
-  public_key(Self) -> PublicKey
+  fn sign(Self, Digest) -> Signature
+  fn public_key(Self) -> PublicKey
 }
 
 ///|
 /// Trait for verifying signatures against public keys.
 pub(open) trait Verifier {
-  verify(Self, PublicKey, Digest, Signature) -> Bool
+  fn verify(Self, PublicKey, Digest, Signature) -> Bool
 }
 
 ///|
@@ -25,12 +25,12 @@ pub fn MockSigner::new(peer_name : String) -> MockSigner {
 }
 
 ///|
-pub impl Signer for MockSigner with sign(self : MockSigner, digest : Digest) -> Signature {
+pub impl Signer for MockSigner with fn sign(self : MockSigner, digest : Digest) -> Signature {
   Signature("HMAC(" + self.secret + "," + digest.0 + ")")
 }
 
 ///|
-pub impl Signer for MockSigner with public_key(self : MockSigner) -> PublicKey {
+pub impl Signer for MockSigner with fn public_key(self : MockSigner) -> PublicKey {
   self.key
 }
 
@@ -54,7 +54,7 @@ pub fn MockVerifier::register(self : MockVerifier, key : PublicKey) -> Unit {
 }
 
 ///|
-pub impl Verifier for MockVerifier with verify(
+pub impl Verifier for MockVerifier with fn verify(
   self : MockVerifier,
   key : PublicKey,
   digest : Digest,

@@ -6,7 +6,7 @@ extern "wasm" fn mem_load8(ptr : Int) -> Int =
 
 ///| Store byte to linear memory (i32.store8)
 extern "wasm" fn mem_store8(ptr : Int, val : Int) -> Unit =
-  #|(func (param i32 i32) (result i32) (i32.store8 (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 i32) (i32.store8 (local.get 0) (local.get 1)))
 
 ///| Load i32 from linear memory (i32.load)
 extern "wasm" fn mem_load32(ptr : Int) -> Int =
@@ -14,7 +14,7 @@ extern "wasm" fn mem_load32(ptr : Int) -> Int =
 
 ///| Store i32 to linear memory (i32.store)
 extern "wasm" fn mem_store32(ptr : Int, val : Int) -> Unit =
-  #|(func (param i32 i32) (result i32) (i32.store (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 i32) (i32.store (local.get 0) (local.get 1)))
 
 ///| Load i64 from linear memory (i64.load)
 extern "wasm" fn mem_load64(ptr : Int) -> Int64 =
@@ -22,7 +22,7 @@ extern "wasm" fn mem_load64(ptr : Int) -> Int64 =
 
 ///| Store i64 to linear memory (i64.store)
 extern "wasm" fn mem_store64(ptr : Int, val : Int64) -> Unit =
-  #|(func (param i32 i64) (result i32) (i64.store (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 i64) (i64.store (local.get 0) (local.get 1)))
 
 ///| Load f32 from linear memory (f32.load)
 extern "wasm" fn mem_load_f32(ptr : Int) -> Float =
@@ -30,7 +30,7 @@ extern "wasm" fn mem_load_f32(ptr : Int) -> Float =
 
 ///| Store f32 to linear memory (f32.store)
 extern "wasm" fn mem_store_f32(ptr : Int, val : Float) -> Unit =
-  #|(func (param i32 f32) (result i32) (f32.store (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 f32) (f32.store (local.get 0) (local.get 1)))
 
 ///| Load f64 from linear memory (f64.load)
 extern "wasm" fn mem_load_f64(ptr : Int) -> Double =
@@ -38,7 +38,7 @@ extern "wasm" fn mem_load_f64(ptr : Int) -> Double =
 
 ///| Store f64 to linear memory (f64.store)
 extern "wasm" fn mem_store_f64(ptr : Int, val : Double) -> Unit =
-  #|(func (param i32 f64) (result i32) (f64.store (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 f64) (f64.store (local.get 0) (local.get 1)))
 
 ///| Get current memory size in pages (memory.size)
 extern "wasm" fn mem_size() -> Int =

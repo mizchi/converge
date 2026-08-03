@@ -3,7 +3,7 @@ package "mizchi/converge/bft"
 
 import {
   "mizchi/converge/types",
-  "moonbitlang/core/builtin",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -30,34 +30,22 @@ pub(all) struct BFTAlert {
   peer : @types.PeerId
   digest : Digest
   detail : String
-}
-pub impl Eq for BFTAlert
-pub impl Show for BFTAlert
+} derive(Eq, @debug.Debug)
 
 pub(all) enum BFTAlertKind {
   Equivocation
   HashMismatch
   InvalidSignature
   MissingDependency
-}
-pub impl Eq for BFTAlertKind
-pub impl Show for BFTAlertKind
+} derive(Eq, @debug.Debug)
 
 pub(all) enum DeliveryResult {
   Accepted(@types.Event)
   Buffered
   Rejected(BFTAlert)
-}
-pub impl Eq for DeliveryResult
-pub impl Show for DeliveryResult
+} derive(Eq, @debug.Debug)
 
-pub(all) struct Digest(String)
-#deprecated
-pub fn Digest::inner(Self) -> String
-pub impl Compare for Digest
-pub impl Eq for Digest
-pub impl Hash for Digest
-pub impl Show for Digest
+pub(all) struct Digest(String) derive(Compare, Eq, Hash, @debug.Debug)
 
 pub(all) struct FnvHasher {
 }
@@ -78,18 +66,9 @@ pub fn MockVerifier::new() -> Self
 pub fn MockVerifier::register(Self, PublicKey) -> Unit
 pub impl Verifier for MockVerifier
 
-pub(all) struct PublicKey(String)
-#deprecated
-pub fn PublicKey::inner(Self) -> String
-pub impl Eq for PublicKey
-pub impl Hash for PublicKey
-pub impl Show for PublicKey
+pub(all) struct PublicKey(String) derive(Eq, Hash, @debug.Debug)
 
-pub(all) struct Signature(String)
-#deprecated
-pub fn Signature::inner(Self) -> String
-pub impl Eq for Signature
-pub impl Show for Signature
+pub(all) struct Signature(String) derive(Eq, @debug.Debug)
 
 pub(all) struct SignedEvent {
   digest : Digest
@@ -103,15 +82,15 @@ pub(all) struct SignedEvent {
 
 // Traits
 pub(open) trait Hasher {
-  hash_string(Self, String) -> Digest
+  fn hash_string(Self, String) -> Digest
 }
 
 pub(open) trait Signer {
-  sign(Self, Digest) -> Signature
-  public_key(Self) -> PublicKey
+  fn sign(Self, Digest) -> Signature
+  fn public_key(Self) -> PublicKey
 }
 
 pub(open) trait Verifier {
-  verify(Self, PublicKey, Digest, Signature) -> Bool
+  fn verify(Self, PublicKey, Digest, Signature) -> Bool
 }
 

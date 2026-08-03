@@ -48,7 +48,7 @@ test "CrdtDoc: two-peer sync scenario" {
   let bob = @doc.CrdtDoc::new(peer_id="bob")
 
   // Alice sends her events to Bob
-  let alice_pending = alice.get_pending(Map::new())
+  let alice_pending = alice.get_pending(Map([]))
   let bob_ops = bob.merge_remote(alice_pending)
   // Bob should get an InsertRow operation
   assert_eq(bob_ops.length(), 1)
@@ -122,7 +122,7 @@ test "CrdtDoc: conflict resolution with LWW" {
   ignore(
     alice.insert(tbl="t", row_id="r1", values=[("x", @types.Value::Int(0))]),
   )
-  let initial = alice.get_pending(Map::new())
+  let initial = alice.get_pending(Map([]))
   ignore(bob.merge_remote(initial))
 
   // Both update "x" concurrently
@@ -174,7 +174,7 @@ test "CrdtDoc: counter stays correct after remote merge" {
   ignore(bob.update(tbl="t", row_id="r2", col="y", value=@types.Value::Int(3)))
   ignore(bob.update(tbl="t", row_id="r2", col="y", value=@types.Value::Int(4)))
   // Bob's lamport is now 3, Alice merges Bob's events
-  let bob_pending = bob.get_pending(Map::new())
+  let bob_pending = bob.get_pending(Map([]))
   ignore(alice.merge_remote(bob_pending))
   // Alice's lamport should have advanced via merge, but counter should still be 1
   let e2 = alice.insert(tbl="t", row_id="r3", values=[
@@ -192,7 +192,7 @@ test "CrdtDoc: concurrent delete and insert symmetry" {
   ignore(
     alice.insert(tbl="t", row_id="r1", values=[("x", @types.Value::Int(1))]),
   )
-  let initial = alice.get_pending(Map::new())
+  let initial = alice.get_pending(Map([]))
   ignore(bob.merge_remote(initial))
   // Alice deletes, Bob inserts new row concurrently
   ignore(alice.delete(tbl="t", row_id="r1"))

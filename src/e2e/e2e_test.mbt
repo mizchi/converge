@@ -5,7 +5,7 @@ struct SimpleDB {
 
 ///|
 fn SimpleDB::new() -> SimpleDB {
-  { rows: Map::new() }
+  { rows: Map([]) }
 }
 
 ///|
@@ -14,7 +14,7 @@ fn SimpleDB::apply_ops(self : SimpleDB, ops : Array[@merge.MergeOp]) -> Unit {
     match op {
       @merge.MergeOp::InsertRow(tbl~, row_id~, values~) => {
         let key = tbl + "\u0000" + row_id
-        let row : Map[String, @types.Value] = Map::new()
+        let row : Map[String, @types.Value] = Map([])
         for pair in values {
           row[pair.0] = pair.1
         }
@@ -25,7 +25,7 @@ fn SimpleDB::apply_ops(self : SimpleDB, ops : Array[@merge.MergeOp]) -> Unit {
         match self.rows.get(key) {
           Some(row) => row[col] = value
           None => {
-            let row : Map[String, @types.Value] = Map::new()
+            let row : Map[String, @types.Value] = Map([])
             row[col] = value
             self.rows[key] = row
           }
@@ -66,7 +66,7 @@ fn sync_to_server(
 ) -> Unit raise Error {
   let (frontier, versions) = doc.sync_state()
   let pending = doc.get_pending(transport.peer_versions)
-  if not(pending.is_empty()) {
+  if !pending.is_empty() {
     transport.push({ peer_id: doc.peer_id, events: pending, frontier })
   }
   ignore(versions)
@@ -80,7 +80,7 @@ fn sync_from_server(
 ) -> Unit raise Error {
   let (_, versions) = doc.sync_state()
   let response = transport.pull({ peer_id: doc.peer_id, known_peers: versions })
-  if not(response.events.is_empty()) {
+  if !response.events.is_empty() {
     let ops = doc.merge_remote(response.events)
     db.apply_ops(ops)
   }

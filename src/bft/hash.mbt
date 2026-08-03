@@ -2,7 +2,7 @@
 /// Trait for computing content-addressed digests.
 /// Implementations can range from simple FNV (testing) to SHA-256 (production).
 pub(open) trait Hasher {
-  hash_string(Self, String) -> Digest
+  fn hash_string(Self, String) -> Digest
 }
 
 ///|
@@ -26,7 +26,10 @@ let fnv_prime : UInt = 16777619
 
 ///|
 /// Compute FNV-1a 32-bit hash and return as hex string digest.
-pub impl Hasher for FnvHasher with hash_string(self : FnvHasher, data : String) -> Digest {
+pub impl Hasher for FnvHasher with fn hash_string(
+  self : FnvHasher,
+  data : String,
+) -> Digest {
   ignore(self)
   let mut hash = fnv_offset_basis
   for i in 0..<data.length() {

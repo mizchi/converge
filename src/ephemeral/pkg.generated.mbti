@@ -3,6 +3,7 @@ package "mizchi/converge/ephemeral"
 
 import {
   "mizchi/converge/types",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -14,9 +15,7 @@ pub(all) struct EphemeralEntry {
   value : @types.Value
   timestamp : Double
   peer : @types.PeerId
-}
-pub impl Eq for EphemeralEntry
-pub impl Show for EphemeralEntry
+} derive(Eq, @debug.Debug)
 
 pub(all) struct EphemeralStore {
   data : Map[String, Map[String, EphemeralEntry]]

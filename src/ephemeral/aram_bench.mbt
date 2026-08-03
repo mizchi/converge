@@ -186,7 +186,7 @@ fn run_aram(ticks : Int, rng : Rng) -> (Int, Int) {
     }
     // 2. Handle respawns
     for p in players {
-      if not(p.alive) {
+      if !p.alive {
         p.dead_timer += 1
         if p.dead_timer >= respawn_ticks {
           p.respawn()

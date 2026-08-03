@@ -8,7 +8,7 @@ pub(all) enum MergeOp {
     values~ : Array[(String, @types.Value)]
   )
   DeleteRow(tbl~ : String, row_id~ : String)
-} derive(Show, Eq)
+} derive(Eq, Debug)
 
 ///|
 /// EG-Walker style merge.
@@ -27,8 +27,8 @@ pub fn merge(
     return []
   }
   // Build remote frontier: collect all deps, then events not depended on are frontier
-  let remote_ids : Map[@types.EventId, Bool] = Map::new()
-  let all_deps : Map[@types.EventId, Unit] = Map::new()
+  let remote_ids : Map[@types.EventId, Bool] = Map([])
+  let all_deps : Map[@types.EventId, Unit] = Map([])
   for e in remote_events {
     remote_ids[e.id] = true
     for dep in e.deps {
@@ -54,14 +54,14 @@ pub fn merge(
     graph.events_since(lca)
   }
   // Build a set of local event IDs (not from remote)
-  let local_event_ids : Map[@types.EventId, Bool] = Map::new()
+  let local_event_ids : Map[@types.EventId, Bool] = Map([])
   for e in since_events {
-    if not(remote_ids.get(e.id).unwrap_or(false)) {
+    if !remote_ids.get(e.id).unwrap_or(false) {
       local_event_ids[e.id] = true
     }
   }
   // Detect conflicts: group by (tbl, row_id, col)
-  let winners : Map[ConflictKey, @types.Event] = Map::new()
+  let winners : Map[ConflictKey, @types.Event] = Map([])
   for e in since_events {
     let (tbl, row_id, col) = op_key(e.op)
     let key : ConflictKey = { tbl, row_id, col }

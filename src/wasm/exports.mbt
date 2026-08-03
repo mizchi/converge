@@ -235,7 +235,7 @@ fn sync_state_to_json(
   versions : Map[@types.PeerId, Int],
 ) -> Json {
   let frontier_json = Json::array(frontier.map(event_id_to_json))
-  let versions_json : Map[String, Json] = Map::new()
+  let versions_json : Map[String, Json] = Map([])
   for peer, counter in versions {
     let @types.PeerId(peer_str) = peer
     versions_json[peer_str] = Json::number(counter.to_double())
@@ -339,7 +339,7 @@ fn parse_values_from_json(json : Json) -> Array[(String, @types.Value)] {
 
 ///|
 fn parse_known_peers(s : String) -> Map[@types.PeerId, Int] {
-  let result : Map[@types.PeerId, Int] = Map::new()
+  let result : Map[@types.PeerId, Int] = Map([])
   let json = try! @json.parse(s)
   guard json is Object(obj) else { return result }
   for key, val in obj {
@@ -383,7 +383,7 @@ pub fn ephemeral_get(handle : Int, ns : String, key : String) -> String {
 pub fn ephemeral_get_all(handle : Int, ns : String) -> String {
   let store = ephemeral_stores[handle]
   let entries = store.get_all(ns)
-  let result : Map[String, Json] = Map::new()
+  let result : Map[String, Json] = Map([])
   for k, entry in entries {
     result[k] = ephemeral_entry_to_json(k, entry)
   }
@@ -396,11 +396,11 @@ pub fn ephemeral_get_all(handle : Int, ns : String) -> String {
 pub fn ephemeral_merge(handle : Int, entries_json : String) -> String {
   let store = ephemeral_stores[handle]
   let json = try! @json.parse(entries_json)
-  let changed : Map[String, Json] = Map::new()
+  let changed : Map[String, Json] = Map([])
   guard json is Object(ns_map) else { return "{}".to_string() }
   for ns, ns_val in ns_map {
     guard ns_val is Object(key_map) else { continue }
-    let ns_changed : Map[String, Json] = Map::new()
+    let ns_changed : Map[String, Json] = Map([])
     for key, entry_json in key_map {
       guard entry_json is Object(obj) else { continue }
       let value = json_to_value(obj.get("value").unwrap_or(Json::null()))

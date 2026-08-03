@@ -161,7 +161,7 @@ test "OpLog::events_after filters by known versions" {
       ),
     })
   }
-  let known : Map[@types.PeerId, Int] = Map::new()
+  let known : Map[@types.PeerId, Int] = Map([])
   known[@types.PeerId("a")] = 2
   let after = log.events_after(known)
   let expanded = @oplog.expand(after)

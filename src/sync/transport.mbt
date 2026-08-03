@@ -1,8 +1,8 @@
 ///|
 /// Backend transport trait for sync
 pub(open) trait SyncTransport {
-  push(Self, PushRequest) -> Unit raise
-  pull(Self, PullRequest) -> PullResponse raise
+  fn push(Self, PushRequest) -> Unit raise
+  fn pull(Self, PullRequest) -> PullResponse raise
 }
 
 ///|
@@ -15,11 +15,14 @@ pub(all) struct InMemoryTransport {
 
 ///|
 pub fn InMemoryTransport::new() -> InMemoryTransport {
-  { events: [], frontier: [], peer_versions: Map::new() }
+  { events: [], frontier: [], peer_versions: Map([]) }
 }
 
 ///|
-pub impl SyncTransport for InMemoryTransport with push(self, req : PushRequest) -> Unit raise {
+pub impl SyncTransport for InMemoryTransport with fn push(
+  self,
+  req : PushRequest,
+) -> Unit raise {
   let expanded = @oplog.expand(req.events)
   for e in expanded {
     // Check if already stored
@@ -35,7 +38,10 @@ pub impl SyncTransport for InMemoryTransport with push(self, req : PushRequest) 
 }
 
 ///|
-pub impl SyncTransport for InMemoryTransport with pull(self, req : PullRequest) -> PullResponse raise {
+pub impl SyncTransport for InMemoryTransport with fn pull(
+  self,
+  req : PullRequest,
+) -> PullResponse raise {
   let result : Array[@types.Event] = []
   for e in self.events {
     let known = req.known_peers.get(e.id.peer).unwrap_or(-1)

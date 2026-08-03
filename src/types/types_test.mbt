@@ -36,9 +36,15 @@ test "RowOp Insert" {
     ("name", @types.Value::Str("Alice")),
     ("age", @types.Value::Int(30)),
   ])
-  inspect(
+  debug_inspect(
     op,
-    content="Insert(tbl=\"users\", row_id=\"u1\", values=[(\"name\", Str(\"Alice\")), (\"age\", Int(30))])",
+    content=(
+      #|Insert(
+      #|  tbl="users",
+      #|  row_id="u1",
+      #|  values=[("name", Str("Alice")), ("age", Int(30))],
+      #|)
+    ),
   )
 }
 

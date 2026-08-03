@@ -8,7 +8,7 @@ pub(all) struct EventGraph {
 
 ///|
 pub fn EventGraph::new() -> EventGraph {
-  { events: Map::new(), frontier: [], frontier_set: Map::new() }
+  { events: Map([]), frontier: [], frontier_set: Map([]) }
 }
 
 ///|
@@ -23,7 +23,7 @@ pub fn EventGraph::add_event(self : EventGraph, event : @types.Event) -> Unit {
 /// Remove deps from frontier, add the new event's id.
 fn EventGraph::update_frontier(self : EventGraph, event : @types.Event) -> Unit {
   for dep in event.deps {
-    if not(self.frontier_set.get(dep) is None) {
+    if !(self.frontier_set.get(dep) is None) {
       self.frontier_set.remove(dep)
       let idx = frontier_index_of(self.frontier, dep)
       if idx >= 0 {

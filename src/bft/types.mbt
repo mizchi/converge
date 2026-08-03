@@ -1,14 +1,14 @@
 ///|
 /// Content-addressed hash digest of an event.
-pub(all) struct Digest(String) derive(Eq, Compare, Hash, Show)
+pub(all) struct Digest(String) derive(Eq, Compare, Hash, Debug)
 
 ///|
 /// Cryptographic signature over a digest.
-pub(all) struct Signature(String) derive(Eq, Show)
+pub(all) struct Signature(String) derive(Eq, Debug)
 
 ///|
 /// Public key identifying a peer for signature verification.
-pub(all) struct PublicKey(String) derive(Eq, Hash, Show)
+pub(all) struct PublicKey(String) derive(Eq, Hash, Debug)
 
 ///|
 /// An event wrapped with cryptographic authentication.
@@ -28,7 +28,7 @@ pub(all) enum BFTAlertKind {
   HashMismatch
   InvalidSignature
   MissingDependency
-} derive(Show, Eq)
+} derive(Eq, Debug)
 
 ///|
 /// Report of a detected Byzantine fault.
@@ -37,7 +37,7 @@ pub(all) struct BFTAlert {
   peer : @types.PeerId
   digest : Digest
   detail : String
-} derive(Show, Eq)
+} derive(Eq, Debug)
 
 ///|
 /// Result of attempting to deliver a signed event through the BFT adapter.
@@ -45,4 +45,4 @@ pub(all) enum DeliveryResult {
   Accepted(@types.Event)
   Buffered
   Rejected(BFTAlert)
-} derive(Show, Eq)
+} derive(Eq, Debug)

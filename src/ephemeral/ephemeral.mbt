@@ -6,7 +6,7 @@ pub(all) struct EphemeralEntry {
   value : @types.Value
   timestamp : Double
   peer : @types.PeerId
-} derive(Show, Eq)
+} derive(Eq, Debug)
 
 ///|
 /// Ephemeral state store using Last-Writer-Wins (LWW) registers.
@@ -23,7 +23,7 @@ pub(all) struct EphemeralStore {
 ///|
 /// Create a new empty EphemeralStore.
 pub fn EphemeralStore::new() -> EphemeralStore {
-  { data: Map::new() }
+  { data: Map([]) }
 }
 
 ///|
@@ -34,7 +34,7 @@ fn EphemeralStore::get_or_create_ns(
   match self.data.get(ns) {
     Some(m) => m
     None => {
-      let m : Map[String, EphemeralEntry] = Map::new()
+      let m : Map[String, EphemeralEntry] = Map([])
       self.data[ns] = m
       m
     }
@@ -77,7 +77,7 @@ pub fn EphemeralStore::get_all(
 ) -> Map[String, EphemeralEntry] {
   match self.data.get(ns) {
     Some(ns_map) => ns_map
-    None => Map::new()
+    None => Map([])
   }
 }
 

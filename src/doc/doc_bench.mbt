@@ -41,7 +41,7 @@ test "bench: two-peer merge 500" (b : @bench.T) {
       alice.update(tbl="t", row_id="r1", col="x", value=@types.Value::Int(i)),
     )
   }
-  let known : Map[@types.PeerId, Int] = Map::new()
+  let known : Map[@types.PeerId, Int] = Map([])
   let alice_runs = alice.get_pending(known)
   b.bench(fn() {
     let bob = CrdtDoc::new(peer_id="bob")
@@ -60,14 +60,14 @@ test "bench: concurrent column edits merge 100" (b : @bench.T) {
       ("b", @types.Value::Int(0)),
     ]),
   )
-  let empty : Map[@types.PeerId, Int] = Map::new()
+  let empty : Map[@types.PeerId, Int] = Map([])
   let initial_runs = alice.get_pending(empty)
   for i in 1..<=100 {
     ignore(
       alice.update(tbl="t", row_id="r1", col="a", value=@types.Value::Int(i)),
     )
   }
-  let known_alice : Map[@types.PeerId, Int] = Map::new()
+  let known_alice : Map[@types.PeerId, Int] = Map([])
   known_alice[@types.PeerId("alice")] = 0
   let alice_after = alice.get_pending(known_alice)
   b.bench(fn() {
@@ -92,7 +92,7 @@ test "bench: get_pending partial sync" (b : @bench.T) {
       doc.insert(tbl="t", row_id="r\{i}", values=[("x", @types.Value::Int(i))]),
     )
   }
-  let known : Map[@types.PeerId, Int] = Map::new()
+  let known : Map[@types.PeerId, Int] = Map([])
   known[@types.PeerId("alice")] = 500
   b.bench(fn() { b.keep(doc.get_pending(known)) })
 }

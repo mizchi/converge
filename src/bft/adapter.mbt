@@ -64,9 +64,7 @@ pub fn BFTAdapter::deliver(
     })
   }
   // Step 2: Signature verification
-  if not(
-      self.verifier.verify(signed.author_key, signed.digest, signed.signature),
-    ) {
+  if !self.verifier.verify(signed.author_key, signed.digest, signed.signature) {
     return Rejected(BFTAlert::{
       kind: InvalidSignature,
       peer: peer_id,
@@ -94,7 +92,7 @@ pub fn BFTAdapter::deliver(
   // Step 4: Causal delivery — check all dep_hashes are in digest_store
   let mut missing = false
   for dep in signed.dep_hashes {
-    if not(self.digest_store.contains(dep.0)) {
+    if !self.digest_store.contains(dep.0) {
       missing = true
       break
     }
@@ -127,12 +125,12 @@ fn BFTAdapter::try_flush(self : BFTAdapter) -> Unit {
     return
   }
   // Build index: dep_digest → indices of events waiting on it
-  let waiters : Map[String, Array[Int]] = {}
+  let waiters : Map[String, Array[Int]] = Map([])
   let unmet_count : Array[Int] = Array::make(len, 0)
   for i, signed in self.pending_buffer {
     let mut unmet = 0
     for dep in signed.dep_hashes {
-      if not(self.digest_store.contains(dep.0)) {
+      if !self.digest_store.contains(dep.0) {
         unmet += 1
         match waiters.get(dep.0) {
           Some(list) => list.push(i)
@@ -180,7 +178,7 @@ fn BFTAdapter::try_flush(self : BFTAdapter) -> Unit {
   // Compact: keep only unaccepted events
   let remaining : Array[SignedEvent] = []
   for i, signed in self.pending_buffer {
-    if not(accepted[i]) {
+    if !accepted[i] {
       remaining.push(signed)
     }
   }

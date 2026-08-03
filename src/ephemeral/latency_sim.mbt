@@ -171,7 +171,7 @@ fn run_aram_with_latency(
     }
     // 2. Respawns
     for p in players {
-      if not(p.alive) {
+      if !p.alive {
         p.dead_timer += 1
         if p.dead_timer >= respawn_ticks {
           p.respawn()

@@ -61,7 +61,7 @@ pub fn OpLog::events_after(
       result.push(run)
     } else {
       let skip = known_counter - run.counter_start + 1
-      let new_ops = run.ops[skip:].to_array()
+      let new_ops = run.ops[skip:].to_owned()
       let new_deps : Array[@types.EventId] = [
         { peer: run.peer, counter: known_counter },
       ]

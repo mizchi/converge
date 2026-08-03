@@ -81,11 +81,7 @@ fn wit_to_row_op(op : RowOp) -> @types.RowOp {
 fn row_op_to_wit(op : @types.RowOp) -> RowOp {
   match op {
     Insert(tbl~, row_id~, values~) =>
-      RowOp::Insert({
-        tbl,
-        row_id,
-        values: values.map(kv_to_wit),
-      })
+      RowOp::Insert({ tbl, row_id, values: values.map(kv_to_wit) })
     Update(tbl~, row_id~, col~, value~) =>
       RowOp::Update({ tbl, row_id, col, val: value_to_wit(value) })
     Delete(tbl~, row_id~) => RowOp::Delete({ tbl, row_id })
@@ -137,11 +133,7 @@ fn merge_op_to_wit(op : @merge.MergeOp) -> MergeOp {
     SetCell(tbl~, row_id~, col~, value~) =>
       MergeOp::SetCell({ tbl, row_id, col, val: value_to_wit(value) })
     InsertRow(tbl~, row_id~, values~) =>
-      MergeOp::InsertRow({
-        tbl,
-        row_id,
-        values: values.map(kv_to_wit),
-      })
+      MergeOp::InsertRow({ tbl, row_id, values: values.map(kv_to_wit) })
     DeleteRow(tbl~, row_id~) => MergeOp::DeleteRow({ tbl, row_id })
   }
 }
@@ -149,10 +141,8 @@ fn merge_op_to_wit(op : @merge.MergeOp) -> MergeOp {
 // -- PeerVersion / SyncState conversion --
 
 ///|
-fn wit_to_known_peers(
-  versions : Array[PeerVersion],
-) -> Map[@types.PeerId, Int] {
-  let m : Map[@types.PeerId, Int] = Map::new()
+fn wit_to_known_peers(versions : Array[PeerVersion]) -> Map[@types.PeerId, Int] {
+  let m : Map[@types.PeerId, Int] = Map([])
   for pv in versions {
     m[@types.PeerId(pv.peer)] = pv.version
   }
@@ -180,7 +170,12 @@ fn ephemeral_entry_to_wit(
   entry : @ephemeral.EphemeralEntry,
 ) -> EphemeralEntry {
   let @types.PeerId(peer_str) = entry.peer
-  { key, val: value_to_wit(entry.value), timestamp: entry.timestamp, peer: peer_str }
+  {
+    key,
+    val: value_to_wit(entry.value),
+    timestamp: entry.timestamp,
+    peer: peer_str,
+  }
 }
 
 // ========== API implementations ==========
@@ -201,11 +196,7 @@ fn doc_insert(
   values : Array[KeyValue],
 ) -> Event {
   let h = handle.reinterpret_as_int()
-  let event = docs[h].insert(
-    tbl~,
-    row_id~,
-    values=values.map(wit_to_kv),
-  )
+  let event = docs[h].insert(tbl~, row_id~, values=values.map(wit_to_kv))
   event_to_wit(event)
 }
 
@@ -230,10 +221,7 @@ fn doc_delete(handle : UInt, tbl : String, row_id : String) -> Event {
 }
 
 ///|
-fn doc_merge_remote(
-  handle : UInt,
-  events : Array[EventRun],
-) -> Array[MergeOp] {
+fn doc_merge_remote(handle : UInt, events : Array[EventRun]) -> Array[MergeOp] {
   let h = handle.reinterpret_as_int()
   let runs = events.map(wit_to_event_run)
   let ops = docs[h].merge_remote(runs)
@@ -274,11 +262,7 @@ fn ephemeral_set(
 }
 
 ///|
-fn ephemeral_get(
-  handle : UInt,
-  ns : String,
-  key : String,
-) -> EphemeralEntry? {
+fn ephemeral_get(handle : UInt, ns : String, key : String) -> EphemeralEntry? {
   let h = handle.reinterpret_as_int()
   match stores[h].get(ns, key) {
     Some(entry) => Some(ephemeral_entry_to_wit(key, entry))
