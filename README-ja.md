@@ -43,9 +43,6 @@ src/
 ├── merge/       EG-Walker 競合解決（列単位 LWW）
 ├── doc/         CrdtDoc — Durable Layer の高レベル API
 ├── ephemeral/   EphemeralStore — LWW レジスタマップ（Ephemeral Layer）
-├── bft/         BFT-CRDT アダプター（ビザンチン障害検出）
-├── audit/       ゲーム非依存のcheckpoint policy、commitment、head、Merkle/AuthMap
-├── x/game_audit/ 実験的なマルチプレイ監査アプリケーション
 ├── sync/        同期プロトコル (PushRequest, PullRequest, PullResponse)
 ├── topology/    ネットワークトポロジシミュレーション (Star, Gossip, Mesh 等)
 ├── wasm/        両レイヤーの WASM/JS エクスポート
@@ -115,34 +112,12 @@ const ops = converge.docMergeRemote(h2, pending);
 
 API リファレンスと型定義の詳細は [component/README.md](component/README.md) を参照。
 
-## BFT Layer (Byzantine Fault Tolerance)
+## Byzantine-aware verification
 
-P2P 環境でのチート検出のため、Kleppmann の "Making CRDTs Byzantine Fault Tolerant" (PaPoC 2022) に基づく検証レイヤー。既存の Durable Layer を変更せず、アダプターとして上に乗る設計。
-
-```
-[Application]
-     |
-[CrdtDoc]        <- 変更なし
-     |
-[BFTAdapter]     <- deliver() で検証後、CrdtDoc に渡す
-     |
-[Transport]      <- 変更なし
-```
-
-`BFTAdapter::deliver(signed_event)` は受信した `SignedEvent` に対し以下を順に検証する:
-
-1. **Hash 整合性** — イベント内容を再シリアライズしてハッシュを再計算、不一致なら拒否
-2. **署名検証** — `Verifier` trait で author_key に対する署名を検証
-3. **Equivocation 検出** — 同一 `(peer, counter)` に異なる digest が来た場合拒否
-4. **因果配送** — 依存する digest が未到着の場合バッファリングし、到着次第フラッシュ
-
-暗号プリミティブは `Hasher` / `Signer` / `Verifier` trait で抽象化されており、テスト用の FNV-1a + Mock 実装と、本番用の SHA-256 + Ed25519 実装を差し替え可能。
-
-ゲーム非依存のcheckpoint cadence、commitment射影、配送/quorum認証、runtime契約、
-認証データ構造、head分類は
-[`src/audit/`](src/audit/README.md) に置く。replay・inventory・mode presetなど用途依存の
-ゲーム監査prototypeは `src/x/game_audit/` に隔離している。研究背景とcontract台帳は
-[`docs/`](docs/README.md)を参照。
+署名付きevent認証、equivocation検出、checkpoint監査contract、形式仕様、マルチプレイ向け
+ゲーム監査prototypeは、任意利用のcompanion library
+[`mizchi/bft`](https://github.com/mizchi/bft)へ分離した。`mizchi/bft`はconvergeに依存するが、
+CRDTのmerge規則は変更しない。
 
 ## 推奨バックエンドアダプター
 

@@ -1,6 +1,6 @@
 name = "mizchi/converge"
 
-version = "0.2.0"
+version = "0.3.0"
 
 readme = "README.md"
 
@@ -13,7 +13,3 @@ keywords = [ "crdt", "local-first", "sync", "eg-walker", "lww" ]
 description = "CRDT-based local-first sync engine inspired by EG-Walker"
 
 source = "src"
-
-import {
-  "mizchi/experimental_crypto@0.0.2",
-}

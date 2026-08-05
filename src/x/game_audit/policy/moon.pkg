@@ -1,7 +1,0 @@
-import {
-  "mizchi/converge/audit",
-}
-
-import {
-  "mizchi/converge/x/game_audit/audit" @game_audit,
-} for "test"

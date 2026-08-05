@@ -43,9 +43,6 @@ src/
 ├── merge/       EG-Walker conflict resolution (LWW per column)
 ├── doc/         CrdtDoc — high-level Durable Layer API
 ├── ephemeral/   EphemeralStore — LWW Register Map (Ephemeral Layer)
-├── bft/         BFT-CRDT adapter (Byzantine fault detection)
-├── audit/       Game-neutral checkpoint, quorum, delivery, runtime, Merkle/AuthMap
-├── x/game_audit/ Experimental multiplayer audit application stack
 ├── sync/        Sync protocol (PushRequest, PullRequest, PullResponse)
 ├── topology/    Network topology simulations (Star, Gossip, Mesh, etc.)
 ├── wasm/        WASM/JS exports for both layers
@@ -115,39 +112,12 @@ const ops = converge.docMergeRemote(h2, pending);
 
 See [component/README.md](component/README.md) for full API reference and type definitions.
 
-## BFT Layer (Byzantine Fault Tolerance)
+## Byzantine-aware verification
 
-Verification layer based on Kleppmann's "Making CRDTs Byzantine Fault Tolerant" (PaPoC 2022) for cheat detection in P2P environments. Sits on top of the existing Durable Layer as an adapter without modifying it.
-
-```
-[Application]
-     |
-[CrdtDoc]        <- unchanged
-     |
-[BFTAdapter]     <- validates before passing to CrdtDoc
-     |
-[Transport]      <- unchanged
-```
-
-`BFTAdapter::deliver(signed_event)` validates each received `SignedEvent` through:
-
-1. **Hash integrity** — Re-serialize and recompute hash; reject on mismatch
-2. **Signature verification** — Verify signature against author's public key via `Verifier` trait
-3. **Equivocation detection** — Reject if same `(peer, counter)` arrives with a different digest
-4. **Causal delivery** — Buffer events with missing dependencies; flush when deps arrive
-
-Crypto primitives are abstracted via `Hasher` / `Signer` / `Verifier` traits,
-allowing swappable implementations. FNV-1a + Mock are deterministic test
-doubles; the isolated game-audit prototype also has an unaudited experimental
-SHA-256 + Ed25519 adapter for interoperability and cost measurement. Production
-deployment still requires an audited, side-channel-appropriate backend.
-
-Game-neutral checkpoint scheduling, commitment projection, authenticated
-delivery/quorum, runtime contracts, data structures, and head classification
-live in [`src/audit/`](src/audit/README.md).
-Opinionated replay/inventory rules and mode presets remain isolated under
-`src/x/game_audit/`; see [`docs/`](docs/README.md) for the research and contract
-ledger.
+Signed-event authentication, equivocation detection, checkpoint audit
+contracts, formal specifications, and the multiplayer game-audit prototype are
+provided by the optional [`mizchi/bft`](https://github.com/mizchi/bft)
+companion library. It depends on converge without changing CRDT merge semantics.
 
 ## Recommended Backend Adapters
 
