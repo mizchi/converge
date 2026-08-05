@@ -1,0 +1,19 @@
+{
+  "name": "converge-node-audit-runtime",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build:moon": "moon build --target js --release",
+    "pretest": "pnpm run build:moon",
+    "pretypecheck": "pnpm run build:moon",
+    "test": "node --test test/*.node-test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "5.9.3"
+  }
+}

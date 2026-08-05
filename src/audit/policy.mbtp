@@ -1,0 +1,190 @@
+///|
+predicate checkpoint_policy_fields_valid_post(
+  event_interval_ms : Int,
+  micro_checkpoint_interval_ms : Int,
+  macro_checkpoint_interval_ms : Int,
+  event_retention_ms : Int,
+  micro_checkpoint_retention_ms : Int,
+  macro_checkpoint_retention_ms : Int,
+  result : Bool,
+) {
+  if event_interval_ms > 0 {
+    if micro_checkpoint_interval_ms >= event_interval_ms {
+      if macro_checkpoint_interval_ms >= micro_checkpoint_interval_ms {
+        if event_retention_ms >= macro_checkpoint_interval_ms {
+          if micro_checkpoint_retention_ms >= event_retention_ms {
+            if macro_checkpoint_retention_ms >=
+              micro_checkpoint_retention_ms {
+              result == true
+            } else {
+              result == false
+            }
+          } else {
+            result == false
+          }
+        } else {
+          result == false
+        }
+      } else {
+        result == false
+      }
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+predicate retained_localization_precision_post(
+  event_interval_ms : Int,
+  micro_checkpoint_interval_ms : Int,
+  macro_checkpoint_interval_ms : Int,
+  event_retention_ms : Int,
+  micro_checkpoint_retention_ms : Int,
+  macro_checkpoint_retention_ms : Int,
+  age_ms : Int,
+  result : Int,
+) {
+  if age_ms < 0 {
+    result == -1
+  } else {
+    if age_ms <= event_retention_ms {
+      result == event_interval_ms
+    } else {
+      if age_ms <= micro_checkpoint_retention_ms {
+        result == micro_checkpoint_interval_ms
+      } else {
+        if age_ms <= macro_checkpoint_retention_ms {
+          result == macro_checkpoint_interval_ms
+        } else {
+          result == -1
+        }
+      }
+    }
+  }
+}
+
+///|
+predicate average_finality_post(
+  macro_checkpoint_interval_ms : Int,
+  mean_validation_ms : Int,
+  result : Int,
+) {
+  result == macro_checkpoint_interval_ms / 2 + mean_validation_ms
+}
+
+///|
+predicate finality_upper_bound_post(
+  macro_checkpoint_interval_ms : Int,
+  validation_latency_bound_ms : Int,
+  result : Int,
+) {
+  result == macro_checkpoint_interval_ms + validation_latency_bound_ms
+}
+
+///|
+pub lemma valid_checkpoint_policy_fields_are_nested(
+  event_interval_ms : Int,
+  micro_checkpoint_interval_ms : Int,
+  macro_checkpoint_interval_ms : Int,
+  event_retention_ms : Int,
+  micro_checkpoint_retention_ms : Int,
+  macro_checkpoint_retention_ms : Int,
+) where {
+  proof_require: checkpoint_policy_fields_valid_post(
+    event_interval_ms,
+    micro_checkpoint_interval_ms,
+    macro_checkpoint_interval_ms,
+    event_retention_ms,
+    micro_checkpoint_retention_ms,
+    macro_checkpoint_retention_ms,
+    true,
+  ),
+  proof_ensure: event_interval_ms > 0,
+  proof_ensure: micro_checkpoint_interval_ms >= event_interval_ms,
+  proof_ensure: macro_checkpoint_interval_ms >=
+    micro_checkpoint_interval_ms,
+  proof_ensure: event_retention_ms >= macro_checkpoint_interval_ms,
+  proof_ensure: micro_checkpoint_retention_ms >= event_retention_ms,
+  proof_ensure: macro_checkpoint_retention_ms >=
+    micro_checkpoint_retention_ms,
+} {
+}
+
+///|
+pub lemma retained_event_leaves_give_event_interval_precision(
+  event_interval_ms : Int,
+  micro_checkpoint_interval_ms : Int,
+  macro_checkpoint_interval_ms : Int,
+  event_retention_ms : Int,
+  micro_checkpoint_retention_ms : Int,
+  macro_checkpoint_retention_ms : Int,
+  age_ms : Int,
+) where {
+  proof_require: age_ms >= 0,
+  proof_require: age_ms <= event_retention_ms,
+  proof_ensure: retained_localization_precision_post(
+    event_interval_ms,
+    micro_checkpoint_interval_ms,
+    macro_checkpoint_interval_ms,
+    event_retention_ms,
+    micro_checkpoint_retention_ms,
+    macro_checkpoint_retention_ms,
+    age_ms,
+    event_interval_ms,
+  ),
+} {
+}
+
+///|
+pub lemma expired_evidence_has_no_localization_precision(
+  event_interval_ms : Int,
+  micro_checkpoint_interval_ms : Int,
+  macro_checkpoint_interval_ms : Int,
+  event_retention_ms : Int,
+  micro_checkpoint_retention_ms : Int,
+  macro_checkpoint_retention_ms : Int,
+  age_ms : Int,
+) where {
+  proof_require: checkpoint_policy_fields_valid_post(
+    event_interval_ms,
+    micro_checkpoint_interval_ms,
+    macro_checkpoint_interval_ms,
+    event_retention_ms,
+    micro_checkpoint_retention_ms,
+    macro_checkpoint_retention_ms,
+    true,
+  ),
+  proof_require: age_ms > macro_checkpoint_retention_ms,
+  proof_ensure: retained_localization_precision_post(
+    event_interval_ms,
+    micro_checkpoint_interval_ms,
+    macro_checkpoint_interval_ms,
+    event_retention_ms,
+    micro_checkpoint_retention_ms,
+    macro_checkpoint_retention_ms,
+    age_ms,
+    -1,
+  ),
+} {
+}
+
+///|
+pub lemma finality_upper_bound_includes_full_macro_window(
+  macro_checkpoint_interval_ms : Int,
+  validation_latency_bound_ms : Int,
+  bound_ms : Int,
+) where {
+  proof_require: macro_checkpoint_interval_ms >= 0,
+  proof_require: validation_latency_bound_ms >= 0,
+  proof_require: finality_upper_bound_post(
+    macro_checkpoint_interval_ms,
+    validation_latency_bound_ms,
+    bound_ms,
+  ),
+  proof_ensure: bound_ms >= macro_checkpoint_interval_ms,
+  proof_ensure: bound_ms >= validation_latency_bound_ms,
+} {
+}

@@ -44,6 +44,8 @@ src/
 ├── doc/         CrdtDoc — Durable Layer の高レベル API
 ├── ephemeral/   EphemeralStore — LWW レジスタマップ（Ephemeral Layer）
 ├── bft/         BFT-CRDT アダプター（ビザンチン障害検出）
+├── audit/       ゲーム非依存のcheckpoint policy、commitment、head、Merkle/AuthMap
+├── x/game_audit/ 実験的なマルチプレイ監査アプリケーション
 ├── sync/        同期プロトコル (PushRequest, PullRequest, PullResponse)
 ├── topology/    ネットワークトポロジシミュレーション (Star, Gossip, Mesh 等)
 ├── wasm/        両レイヤーの WASM/JS エクスポート
@@ -135,6 +137,12 @@ P2P 環境でのチート検出のため、Kleppmann の "Making CRDTs Byzantine
 4. **因果配送** — 依存する digest が未到着の場合バッファリングし、到着次第フラッシュ
 
 暗号プリミティブは `Hasher` / `Signer` / `Verifier` trait で抽象化されており、テスト用の FNV-1a + Mock 実装と、本番用の SHA-256 + Ed25519 実装を差し替え可能。
+
+ゲーム非依存のcheckpoint cadence、commitment射影、配送/quorum認証、runtime契約、
+認証データ構造、head分類は
+[`src/audit/`](src/audit/README.md) に置く。replay・inventory・mode presetなど用途依存の
+ゲーム監査prototypeは `src/x/game_audit/` に隔離している。研究背景とcontract台帳は
+[`docs/`](docs/README.md)を参照。
 
 ## 推奨バックエンドアダプター
 

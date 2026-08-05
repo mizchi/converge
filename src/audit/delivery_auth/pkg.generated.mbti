@@ -1,0 +1,91 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/audit/delivery_auth"
+
+import {
+  "mizchi/converge/audit/runtime",
+  "mizchi/converge/bft",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn open_authenticated_checkpoint_delivery(&@bft.Hasher, &@bft.Verifier, DeliveryAuthenticationPolicy, SignedCheckpointDelivery, Array[SignedCheckpointDeliveryApproval]) -> DeliveryAuthenticationResult
+
+pub fn serialize_checkpoint_delivery_statement(CheckpointDeliveryStatement) -> String
+
+pub fn sign_checkpoint_delivery(&@bft.Hasher, &@bft.Signer, String, CheckpointDeliveryStatement) -> SignedCheckpointDelivery
+
+pub fn sign_checkpoint_delivery_approval(&@bft.Hasher, &@bft.Signer, String, @bft.Digest) -> SignedCheckpointDeliveryApproval
+
+// Errors
+
+// Types and methods
+pub struct AuthenticatedCheckpointDelivery {
+  statement_value : CheckpointDeliveryStatement
+  producer_id_value : String
+  approval_count_value : Int
+} derive(Eq, @debug.Debug)
+pub fn AuthenticatedCheckpointDelivery::approval_count(Self) -> Int
+pub fn AuthenticatedCheckpointDelivery::producer_id(Self) -> String
+pub fn AuthenticatedCheckpointDelivery::statement(Self) -> CheckpointDeliveryStatement
+
+pub(all) struct CheckpointDeliveryStatement {
+  boundary : @runtime.AuditBoundary
+  destination_id : String
+  epoch : Int
+  previous_checkpoint : @bft.Digest
+  checkpoint_digest : @bft.Digest
+  canonical_envelope : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct DeliveryAuthenticationPolicy {
+  producer_id : String
+  producer_key : @bft.PublicKey
+  witnesses : Array[DeliveryWitness]
+  required_approvals : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum DeliveryAuthenticationRefusal {
+  DeliveryInvalidStatement
+  DeliveryInvalidPolicy
+  DeliveryProducerIdentityMismatch
+  DeliveryStatementDigestMismatch
+  DeliveryInvalidProducerSignature
+  DeliveryApprovalStatementMismatch
+  DeliveryUnknownWitness
+  DeliveryWitnessKeyMismatch
+  DeliveryApprovalDigestMismatch
+  DeliveryInvalidWitnessSignature
+  DeliveryDuplicateWitness
+  DeliveryUnderQuorum(Int, Int)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum DeliveryAuthenticationResult {
+  DeliveryAuthenticated(AuthenticatedCheckpointDelivery)
+  DeliveryAuthenticationRefused(DeliveryAuthenticationRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct DeliveryWitness {
+  witness_id : String
+  witness_key : @bft.PublicKey
+} derive(Eq, @debug.Debug)
+
+pub(all) struct SignedCheckpointDelivery {
+  statement : CheckpointDeliveryStatement
+  digest : @bft.Digest
+  signature : @bft.Signature
+  producer_id : String
+  producer_key : @bft.PublicKey
+} derive(Eq, @debug.Debug)
+
+pub(all) struct SignedCheckpointDeliveryApproval {
+  statement_digest : @bft.Digest
+  witness_id : String
+  digest : @bft.Digest
+  signature : @bft.Signature
+  witness_key : @bft.PublicKey
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

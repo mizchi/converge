@@ -1,0 +1,83 @@
+///|
+predicate checkpoint_replay_capability_post(
+  capability_present : Bool,
+  checkpoint_digest_matches : Bool,
+  authority_key_matches : Bool,
+  result : Bool,
+) {
+  if capability_present {
+    if checkpoint_digest_matches {
+      result == authority_key_matches
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma accepted_checkpoint_replay_has_exact_capability(
+  capability_present : Bool,
+  checkpoint_digest_matches : Bool,
+  authority_key_matches : Bool,
+) where {
+  proof_require: checkpoint_replay_capability_post(
+    capability_present,
+    checkpoint_digest_matches,
+    authority_key_matches,
+    true,
+  ),
+  proof_ensure: capability_present == true,
+  proof_ensure: checkpoint_digest_matches == true,
+  proof_ensure: authority_key_matches == true,
+} {
+}
+
+///|
+pub lemma missing_checkpoint_replay_capability_fails_closed(
+  checkpoint_digest_matches : Bool,
+  authority_key_matches : Bool,
+  outcome : Bool,
+) where {
+  proof_require: checkpoint_replay_capability_post(
+    false,
+    checkpoint_digest_matches,
+    authority_key_matches,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}
+
+///|
+pub lemma foreign_checkpoint_replay_capability_fails_closed(
+  capability_present : Bool,
+  authority_key_matches : Bool,
+  outcome : Bool,
+) where {
+  proof_require: checkpoint_replay_capability_post(
+    capability_present,
+    false,
+    authority_key_matches,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}
+
+///|
+pub lemma foreign_authority_replay_capability_fails_closed(
+  capability_present : Bool,
+  checkpoint_digest_matches : Bool,
+  outcome : Bool,
+) where {
+  proof_require: checkpoint_replay_capability_post(
+    capability_present,
+    checkpoint_digest_matches,
+    false,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}

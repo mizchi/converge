@@ -1,0 +1,197 @@
+///|
+predicate hp_after_encounter_damage_post(
+  hp : Int,
+  damage : Int,
+  was_hit : Bool,
+  result : Int,
+) {
+  if hp <= 0 {
+    result == 0
+  } else {
+    if !was_hit {
+      result == hp
+    } else {
+      if damage <= 0 {
+        result == hp
+      } else {
+        if hp <= damage {
+          result == 0
+        } else {
+          result == hp - damage
+        }
+      }
+    }
+  }
+}
+
+///|
+predicate encounter_clear_allowed_post(
+  schedule_complete : Bool,
+  survivor_count : Int,
+  result : Bool,
+) {
+  if schedule_complete {
+    if 0 < survivor_count {
+      result == true
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+predicate encounter_loot_allowed_post(
+  encounter_cleared : Bool,
+  player_hp : Int,
+  result : Bool,
+) {
+  if encounter_cleared {
+    if 0 < player_hp {
+      result == true
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+predicate raid_boss_clear_allowed_post(
+  defense_phase_cleared : Bool,
+  boss_hp : Int,
+  result : Bool,
+) {
+  if defense_phase_cleared {
+    result == (boss_hp == 0)
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma encounter_hp_is_non_negative(
+  hp : Int,
+  damage : Int,
+  was_hit : Bool,
+  next_hp : Int,
+) where {
+  proof_require: hp_after_encounter_damage_post(hp, damage, was_hit, next_hp),
+  proof_ensure: 0 <= next_hp,
+} {
+}
+
+///|
+pub lemma encounter_death_is_absorbing(
+  hp : Int,
+  damage : Int,
+  was_hit : Bool,
+  next_hp : Int,
+) where {
+  proof_require: hp <= 0,
+  proof_require: hp_after_encounter_damage_post(hp, damage, was_hit, next_hp),
+  proof_ensure: next_hp == 0,
+} {
+}
+
+///|
+pub lemma encounter_miss_preserves_valid_hp(
+  hp : Int,
+  damage : Int,
+  next_hp : Int,
+) where {
+  proof_require: 0 <= hp,
+  proof_require: hp_after_encounter_damage_post(hp, damage, false, next_hp),
+  proof_ensure: next_hp == hp,
+} {
+}
+
+///|
+pub lemma positive_encounter_damage_cannot_increase_hp(
+  hp : Int,
+  damage : Int,
+  next_hp : Int,
+) where {
+  proof_require: 0 <= hp,
+  proof_require: 0 <= damage,
+  proof_require: hp_after_encounter_damage_post(hp, damage, true, next_hp),
+  proof_ensure: next_hp <= hp,
+} {
+}
+
+///|
+pub lemma accepted_encounter_clear_requires_completion_and_survivor(
+  schedule_complete : Bool,
+  survivor_count : Int,
+) where {
+  proof_require: encounter_clear_allowed_post(
+    schedule_complete, survivor_count, true,
+  ),
+  proof_ensure: schedule_complete == true,
+  proof_ensure: 0 < survivor_count,
+} {
+}
+
+///|
+pub lemma incomplete_encounter_cannot_clear(
+  survivor_count : Int,
+  allowed : Bool,
+) where {
+  proof_require: encounter_clear_allowed_post(false, survivor_count, allowed),
+  proof_ensure: allowed == false,
+} {
+}
+
+///|
+pub lemma encounter_loot_requires_clear_and_living_player(
+  encounter_cleared : Bool,
+  player_hp : Int,
+) where {
+  proof_require: encounter_loot_allowed_post(encounter_cleared, player_hp, true),
+  proof_ensure: encounter_cleared == true,
+  proof_ensure: 0 < player_hp,
+} {
+}
+
+///|
+pub lemma defeated_player_cannot_receive_encounter_loot(
+  encounter_cleared : Bool,
+  player_hp : Int,
+  allowed : Bool,
+) where {
+  proof_require: player_hp <= 0,
+  proof_require: encounter_loot_allowed_post(
+    encounter_cleared, player_hp, allowed,
+  ),
+  proof_ensure: allowed == false,
+} {
+}
+
+///|
+pub lemma cleared_raid_requires_defense_and_zero_boss_hp(
+  defense_phase_cleared : Bool,
+  boss_hp : Int,
+) where {
+  proof_require: raid_boss_clear_allowed_post(
+    defense_phase_cleared, boss_hp, true,
+  ),
+  proof_ensure: defense_phase_cleared == true,
+  proof_ensure: boss_hp == 0,
+} {
+}
+
+///|
+pub lemma living_boss_prevents_raid_clear(
+  defense_phase_cleared : Bool,
+  boss_hp : Int,
+  allowed : Bool,
+) where {
+  proof_require: boss_hp > 0,
+  proof_require: raid_boss_clear_allowed_post(
+    defense_phase_cleared, boss_hp, allowed,
+  ),
+  proof_ensure: allowed == false,
+} {
+}

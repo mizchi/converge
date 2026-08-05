@@ -1,0 +1,298 @@
+///|
+predicate open_world_seal_decision_is_truncated(
+  decision : OpenWorldSealConflictDecision,
+) {
+  match decision {
+    RegistryTruncated => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_seal_decision_is_substituted(
+  decision : OpenWorldSealConflictDecision,
+) {
+  match decision {
+    SlotSubstituted => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_seal_decision_is_missing(
+  decision : OpenWorldSealConflictDecision,
+) {
+  match decision {
+    SlotMissing => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_seal_decision_is_clean(
+  decision : OpenWorldSealConflictDecision,
+) {
+  match decision {
+    NoConflict => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_seal_decision_is_invalid(
+  decision : OpenWorldSealConflictDecision,
+) {
+  match decision {
+    InvalidEvidence => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_seal_conflict_post(
+  encounter_boundary_matches : Bool,
+  registration_index : Int,
+  registered_count : Int,
+  missing_registration_present : Bool,
+  missing_registration_matches : Bool,
+  conflicting_inclusion_present : Bool,
+  conflicting_inclusion_matches : Bool,
+  sealed_digest_matches : Bool,
+  decision : OpenWorldSealConflictDecision,
+) {
+  if !encounter_boundary_matches ||
+    registration_index < 0 ||
+    registered_count < 0 {
+    open_world_seal_decision_is_invalid(decision)
+  } else {
+    if registration_index >= registered_count {
+      open_world_seal_decision_is_truncated(decision)
+    } else {
+      if missing_registration_present && conflicting_inclusion_present {
+        open_world_seal_decision_is_invalid(decision)
+      } else {
+        if missing_registration_present {
+          if missing_registration_matches {
+            open_world_seal_decision_is_missing(decision)
+          } else {
+            open_world_seal_decision_is_invalid(decision)
+          }
+        } else {
+          if !conflicting_inclusion_present || !conflicting_inclusion_matches {
+            open_world_seal_decision_is_invalid(decision)
+          } else {
+            if sealed_digest_matches {
+              open_world_seal_decision_is_clean(decision)
+            } else {
+              open_world_seal_decision_is_substituted(decision)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+///|
+pub lemma open_world_truncation_requires_matching_boundary_and_out_of_range_slot(
+  encounter_boundary_matches : Bool,
+  registration_index : Int,
+  registered_count : Int,
+  missing_registration_present : Bool,
+  missing_registration_matches : Bool,
+  conflicting_inclusion_present : Bool,
+  conflicting_inclusion_matches : Bool,
+  sealed_digest_matches : Bool,
+) where {
+  proof_require: open_world_seal_conflict_post(
+    encounter_boundary_matches,
+    registration_index,
+    registered_count,
+    missing_registration_present,
+    missing_registration_matches,
+    conflicting_inclusion_present,
+    conflicting_inclusion_matches,
+    sealed_digest_matches,
+    RegistryTruncated,
+  ),
+  proof_ensure: encounter_boundary_matches == true,
+  proof_ensure: registration_index >= 0,
+  proof_ensure: registered_count >= 0,
+  proof_ensure: registration_index >= registered_count,
+} {
+}
+
+///|
+pub lemma open_world_substitution_requires_exact_conflicting_inclusion(
+  encounter_boundary_matches : Bool,
+  registration_index : Int,
+  registered_count : Int,
+  missing_registration_present : Bool,
+  missing_registration_matches : Bool,
+  conflicting_inclusion_present : Bool,
+  conflicting_inclusion_matches : Bool,
+  sealed_digest_matches : Bool,
+) where {
+  proof_require: open_world_seal_conflict_post(
+    encounter_boundary_matches,
+    registration_index,
+    registered_count,
+    missing_registration_present,
+    missing_registration_matches,
+    conflicting_inclusion_present,
+    conflicting_inclusion_matches,
+    sealed_digest_matches,
+    SlotSubstituted,
+  ),
+  proof_ensure: encounter_boundary_matches == true,
+  proof_ensure: registration_index >= 0,
+  proof_ensure: registration_index < registered_count,
+  proof_ensure: missing_registration_present == false,
+  proof_ensure: conflicting_inclusion_present == true,
+  proof_ensure: conflicting_inclusion_matches == true,
+  proof_ensure: sealed_digest_matches == false,
+} {
+}
+
+///|
+pub lemma open_world_missing_slot_requires_exact_non_membership(
+  encounter_boundary_matches : Bool,
+  registration_index : Int,
+  registered_count : Int,
+  missing_registration_present : Bool,
+  missing_registration_matches : Bool,
+  conflicting_inclusion_present : Bool,
+  conflicting_inclusion_matches : Bool,
+  sealed_digest_matches : Bool,
+) where {
+  proof_require: open_world_seal_conflict_post(
+    encounter_boundary_matches,
+    registration_index,
+    registered_count,
+    missing_registration_present,
+    missing_registration_matches,
+    conflicting_inclusion_present,
+    conflicting_inclusion_matches,
+    sealed_digest_matches,
+    SlotMissing,
+  ),
+  proof_ensure: encounter_boundary_matches == true,
+  proof_ensure: registration_index >= 0,
+  proof_ensure: registration_index < registered_count,
+  proof_ensure: missing_registration_present == true,
+  proof_ensure: missing_registration_matches == true,
+  proof_ensure: conflicting_inclusion_present == false,
+} {
+}
+
+///|
+pub lemma open_world_matching_included_slot_is_not_a_conflict(
+  registration_index : Int,
+  registered_count : Int,
+) where {
+  proof_require: 0 <= registration_index,
+  proof_require: registration_index < registered_count,
+  proof_ensure: open_world_seal_conflict_post(
+    true,
+    registration_index,
+    registered_count,
+    false,
+    false,
+    true,
+    true,
+    true,
+    NoConflict,
+  ),
+} {
+}
+
+///|
+pub lemma open_world_wrong_boundary_cannot_accuse_seal(
+  registration_index : Int,
+  registered_count : Int,
+  missing_registration_present : Bool,
+  missing_registration_matches : Bool,
+  conflicting_inclusion_present : Bool,
+  conflicting_inclusion_matches : Bool,
+  sealed_digest_matches : Bool,
+) where {
+  proof_ensure: open_world_seal_conflict_post(
+    false,
+    registration_index,
+    registered_count,
+    missing_registration_present,
+    missing_registration_matches,
+    conflicting_inclusion_present,
+    conflicting_inclusion_matches,
+    sealed_digest_matches,
+    InvalidEvidence,
+  ),
+} {
+}
+
+///|
+pub lemma open_world_missing_conflicting_proof_cannot_accuse_seal(
+  registration_index : Int,
+  registered_count : Int,
+  sealed_digest_matches : Bool,
+) where {
+  proof_require: 0 <= registration_index,
+  proof_require: registration_index < registered_count,
+  proof_ensure: open_world_seal_conflict_post(
+    true,
+    registration_index,
+    registered_count,
+    false,
+    false,
+    false,
+    false,
+    sealed_digest_matches,
+    InvalidEvidence,
+  ),
+} {
+}
+
+///|
+pub lemma open_world_invalid_non_membership_cannot_accuse_seal(
+  registration_index : Int,
+  registered_count : Int,
+) where {
+  proof_require: 0 <= registration_index,
+  proof_require: registration_index < registered_count,
+  proof_ensure: open_world_seal_conflict_post(
+    true,
+    registration_index,
+    registered_count,
+    true,
+    false,
+    false,
+    false,
+    false,
+    InvalidEvidence,
+  ),
+} {
+}
+
+///|
+pub lemma open_world_ambiguous_conflict_evidence_is_invalid(
+  registration_index : Int,
+  registered_count : Int,
+  missing_registration_matches : Bool,
+  conflicting_inclusion_matches : Bool,
+  sealed_digest_matches : Bool,
+) where {
+  proof_require: 0 <= registration_index,
+  proof_require: registration_index < registered_count,
+  proof_ensure: open_world_seal_conflict_post(
+    true,
+    registration_index,
+    registered_count,
+    true,
+    missing_registration_matches,
+    true,
+    conflicting_inclusion_matches,
+    sealed_digest_matches,
+    InvalidEvidence,
+  ),
+} {
+}

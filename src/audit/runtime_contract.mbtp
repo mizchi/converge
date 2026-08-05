@@ -1,0 +1,339 @@
+///|
+predicate runtime_epoch_closure_facts_valid_post(
+  frontier_complete : Bool,
+  conflict_free : Bool,
+  quorum_satisfied : Bool,
+  result : Bool,
+) {
+  if frontier_complete {
+    if conflict_free {
+      result == quorum_satisfied
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma ready_epoch_closure_requires_all_trust_facts(
+  frontier_complete : Bool,
+  conflict_free : Bool,
+  quorum_satisfied : Bool,
+) where {
+  proof_require: runtime_epoch_closure_facts_valid_post(
+    frontier_complete,
+    conflict_free,
+    quorum_satisfied,
+    true,
+  ),
+  proof_ensure: frontier_complete == true,
+  proof_ensure: conflict_free == true,
+  proof_ensure: quorum_satisfied == true,
+} {
+}
+
+///|
+pub lemma conflict_never_opens_epoch_closure(
+  frontier_complete : Bool,
+  quorum_satisfied : Bool,
+) where {
+  proof_ensure: runtime_epoch_closure_facts_valid_post(
+    frontier_complete,
+    false,
+    quorum_satisfied,
+    false,
+  ),
+} {
+}
+
+///|
+predicate runtime_checkpoint_ack_is_success(
+  accepted : Bool,
+  duplicate : Bool,
+) {
+  if accepted {
+    true
+  } else {
+    duplicate
+  }
+}
+
+///|
+predicate runtime_checkpoint_ack_completion_allowed_post(
+  authority_matches : Bool,
+  boundary_matches : Bool,
+  epoch_matches : Bool,
+  digest_matches : Bool,
+  accepted : Bool,
+  duplicate : Bool,
+  result : Bool,
+) {
+  if authority_matches {
+    if boundary_matches {
+      if epoch_matches {
+        if digest_matches {
+          if accepted {
+            result == true
+          } else {
+            result == duplicate
+          }
+        } else {
+          result == false
+        }
+      } else {
+        result == false
+      }
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma completed_checkpoint_ack_requires_all_bindings(
+  authority_matches : Bool,
+  boundary_matches : Bool,
+  epoch_matches : Bool,
+  digest_matches : Bool,
+  accepted : Bool,
+  duplicate : Bool,
+) where {
+  proof_require: runtime_checkpoint_ack_completion_allowed_post(
+    authority_matches,
+    boundary_matches,
+    epoch_matches,
+    digest_matches,
+    accepted,
+    duplicate,
+    true,
+  ),
+  proof_ensure: authority_matches == true,
+  proof_ensure: boundary_matches == true,
+  proof_ensure: epoch_matches == true,
+  proof_ensure: digest_matches == true,
+  proof_ensure: runtime_checkpoint_ack_is_success(accepted, duplicate),
+} {
+}
+
+///|
+pub lemma non_success_ack_never_completes_outbox(
+  authority_matches : Bool,
+  boundary_matches : Bool,
+  epoch_matches : Bool,
+  digest_matches : Bool,
+) where {
+  proof_ensure: runtime_checkpoint_ack_completion_allowed_post(
+    authority_matches,
+    boundary_matches,
+    epoch_matches,
+    digest_matches,
+    false,
+    false,
+    false,
+  ),
+} {
+}
+
+///|
+predicate runtime_checkpoint_delivery_authentication_allowed_post(
+  statement_valid : Bool,
+  policy_valid : Bool,
+  producer_identity_matches : Bool,
+  producer_signature_valid : Bool,
+  roster_valid : Bool,
+  quorum_satisfied : Bool,
+  result : Bool,
+) {
+  if statement_valid {
+    if policy_valid {
+      if producer_identity_matches {
+        if producer_signature_valid {
+          if roster_valid {
+            result == quorum_satisfied
+          } else {
+            result == false
+          }
+        } else {
+          result == false
+        }
+      } else {
+        result == false
+      }
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma authenticated_checkpoint_delivery_requires_every_trust_fact(
+  statement_valid : Bool,
+  policy_valid : Bool,
+  producer_identity_matches : Bool,
+  producer_signature_valid : Bool,
+  roster_valid : Bool,
+  quorum_satisfied : Bool,
+) where {
+  proof_require: runtime_checkpoint_delivery_authentication_allowed_post(
+    statement_valid,
+    policy_valid,
+    producer_identity_matches,
+    producer_signature_valid,
+    roster_valid,
+    quorum_satisfied,
+    true,
+  ),
+  proof_ensure: statement_valid == true,
+  proof_ensure: policy_valid == true,
+  proof_ensure: producer_identity_matches == true,
+  proof_ensure: producer_signature_valid == true,
+  proof_ensure: roster_valid == true,
+  proof_ensure: quorum_satisfied == true,
+} {
+}
+
+///|
+pub lemma invalid_producer_signature_never_authenticates_delivery(
+  statement_valid : Bool,
+  policy_valid : Bool,
+  producer_identity_matches : Bool,
+  roster_valid : Bool,
+  quorum_satisfied : Bool,
+) where {
+  proof_ensure: runtime_checkpoint_delivery_authentication_allowed_post(
+    statement_valid,
+    policy_valid,
+    producer_identity_matches,
+    false,
+    roster_valid,
+    quorum_satisfied,
+    false,
+  ),
+} {
+}
+
+///|
+pub lemma under_quorum_never_authenticates_checkpoint_delivery(
+  statement_valid : Bool,
+  policy_valid : Bool,
+  producer_identity_matches : Bool,
+  producer_signature_valid : Bool,
+  roster_valid : Bool,
+) where {
+  proof_ensure: runtime_checkpoint_delivery_authentication_allowed_post(
+    statement_valid,
+    policy_valid,
+    producer_identity_matches,
+    producer_signature_valid,
+    roster_valid,
+    false,
+    false,
+  ),
+} {
+}
+
+///|
+predicate runtime_atomic_seal_advance_allowed_post(
+  boundary_matches : Bool,
+  closure_epoch_matches : Bool,
+  closure_available : Bool,
+  exact_next : Bool,
+  parent_matches : Bool,
+  destinations_valid : Bool,
+  capacity_available : Bool,
+  created_order_available : Bool,
+  result : Bool,
+) {
+  if boundary_matches {
+    if closure_epoch_matches {
+      if closure_available {
+        if exact_next {
+          if parent_matches {
+            if destinations_valid {
+              if capacity_available {
+                result == created_order_available
+              } else {
+                result == false
+              }
+            } else {
+              result == false
+            }
+          } else {
+            result == false
+          }
+        } else {
+          result == false
+        }
+      } else {
+        result == false
+      }
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma prepared_atomic_seal_requires_every_binding(
+  boundary_matches : Bool,
+  closure_epoch_matches : Bool,
+  closure_available : Bool,
+  exact_next : Bool,
+  parent_matches : Bool,
+  destinations_valid : Bool,
+  capacity_available : Bool,
+  created_order_available : Bool,
+) where {
+  proof_require: runtime_atomic_seal_advance_allowed_post(
+    boundary_matches,
+    closure_epoch_matches,
+    closure_available,
+    exact_next,
+    parent_matches,
+    destinations_valid,
+    capacity_available,
+    created_order_available,
+    true,
+  ),
+  proof_ensure: boundary_matches == true,
+  proof_ensure: closure_epoch_matches == true,
+  proof_ensure: closure_available == true,
+  proof_ensure: exact_next == true,
+  proof_ensure: parent_matches == true,
+  proof_ensure: destinations_valid == true,
+  proof_ensure: capacity_available == true,
+  proof_ensure: created_order_available == true,
+} {
+}
+
+///|
+pub lemma unavailable_capacity_never_prepares_atomic_seal(
+  boundary_matches : Bool,
+  closure_epoch_matches : Bool,
+  closure_available : Bool,
+  exact_next : Bool,
+  parent_matches : Bool,
+  destinations_valid : Bool,
+  created_order_available : Bool,
+) where {
+  proof_ensure: runtime_atomic_seal_advance_allowed_post(
+    boundary_matches,
+    closure_epoch_matches,
+    closure_available,
+    exact_next,
+    parent_matches,
+    destinations_valid,
+    false,
+    created_order_available,
+    false,
+  ),
+} {
+}

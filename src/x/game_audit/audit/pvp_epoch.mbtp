@@ -1,0 +1,286 @@
+///|
+predicate pvp_command_rules_hold(
+  actor_hp : Int,
+  equivocated : Bool,
+  tick : Int,
+  ticks_per_epoch : Int,
+  receipt_tick : Int,
+  max_late_ticks : Int,
+  move_distance : Int,
+  max_move_distance : Int,
+  destination_in_arena : Bool,
+) {
+  actor_hp > 0 &&
+  !equivocated &&
+  tick >= 0 &&
+  tick < ticks_per_epoch &&
+  max_late_ticks >= 0 &&
+  receipt_tick >= tick &&
+  receipt_tick <= tick + max_late_ticks &&
+  move_distance >= 0 &&
+  max_move_distance >= 0 &&
+  move_distance <= max_move_distance &&
+  destination_in_arena
+}
+
+///|
+predicate pvp_command_allowed_post(
+  actor_hp : Int,
+  equivocated : Bool,
+  tick : Int,
+  ticks_per_epoch : Int,
+  receipt_tick : Int,
+  max_late_ticks : Int,
+  move_distance : Int,
+  max_move_distance : Int,
+  destination_in_arena : Bool,
+  result : Bool,
+) {
+  if pvp_command_rules_hold(
+    actor_hp,
+    equivocated,
+    tick,
+    ticks_per_epoch,
+    receipt_tick,
+    max_late_ticks,
+    move_distance,
+    max_move_distance,
+    destination_in_arena,
+  ) {
+    result == true
+  } else {
+    result == false
+  }
+}
+
+///|
+predicate pvp_elimination_score_delta_post(
+  target_hp_before : Int,
+  target_hp_after : Int,
+  enemy_damage : Bool,
+  score_per_elimination : Int,
+  result : Int,
+) {
+  if target_hp_before > 0 {
+    if target_hp_after == 0 {
+      if enemy_damage {
+        if score_per_elimination > 0 {
+          result == score_per_elimination
+        } else {
+          result == 0
+        }
+      } else {
+        result == 0
+      }
+    } else {
+      result == 0
+    }
+  } else {
+    result == 0
+  }
+}
+
+///|
+predicate pvp_attack_cooldown_allowed_post(
+  previous_tick : Int,
+  has_previous : Bool,
+  tick : Int,
+  cooldown_ticks : Int,
+  result : Bool,
+) {
+  if tick < 0 {
+    result == false
+  } else {
+    if cooldown_ticks < 0 {
+      result == false
+    } else {
+      if !has_previous {
+        result == true
+      } else {
+        if previous_tick < 0 {
+          result == false
+        } else {
+          if tick < previous_tick {
+            result == false
+          } else {
+            if cooldown_ticks <= tick - previous_tick {
+              result == true
+            } else {
+              result == false
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+///|
+predicate pvp_objective_score_delta_post(
+  occupying_team_count : Int,
+  team_occupies : Bool,
+  score_per_tick : Int,
+  result : Int,
+) {
+  if occupying_team_count == 1 {
+    if team_occupies {
+      if score_per_tick > 0 {
+        result == score_per_tick
+      } else {
+        result == 0
+      }
+    } else {
+      result == 0
+    }
+  } else {
+    result == 0
+  }
+}
+
+///|
+pub lemma accepted_pvp_command_obeys_public_bounds(
+  actor_hp : Int,
+  equivocated : Bool,
+  tick : Int,
+  ticks_per_epoch : Int,
+  receipt_tick : Int,
+  max_late_ticks : Int,
+  move_distance : Int,
+  max_move_distance : Int,
+  destination_in_arena : Bool,
+) where {
+  proof_require: pvp_command_allowed_post(
+    actor_hp,
+    equivocated,
+    tick,
+    ticks_per_epoch,
+    receipt_tick,
+    max_late_ticks,
+    move_distance,
+    max_move_distance,
+    destination_in_arena,
+    true,
+  ),
+  proof_ensure: actor_hp > 0,
+  proof_ensure: equivocated == false,
+  proof_ensure: tick >= 0,
+  proof_ensure: tick < ticks_per_epoch,
+  proof_ensure: receipt_tick >= tick,
+  proof_ensure: receipt_tick <= tick + max_late_ticks,
+  proof_ensure: move_distance <= max_move_distance,
+  proof_ensure: destination_in_arena == true,
+} {
+}
+
+///|
+pub lemma positive_pvp_score_requires_enemy_elimination(
+  target_hp_before : Int,
+  target_hp_after : Int,
+  enemy_damage : Bool,
+  score_per_elimination : Int,
+  score_delta : Int,
+) where {
+  proof_require: pvp_elimination_score_delta_post(
+    target_hp_before,
+    target_hp_after,
+    enemy_damage,
+    score_per_elimination,
+    score_delta,
+  ),
+  proof_require: score_delta > 0,
+  proof_ensure: target_hp_before > 0,
+  proof_ensure: target_hp_after == 0,
+  proof_ensure: enemy_damage == true,
+  proof_ensure: score_per_elimination > 0,
+  proof_ensure: score_delta == score_per_elimination,
+} {
+}
+
+///|
+pub lemma surviving_pvp_target_cannot_score(
+  target_hp_before : Int,
+  target_hp_after : Int,
+  enemy_damage : Bool,
+  score_per_elimination : Int,
+  score_delta : Int,
+) where {
+  proof_require: target_hp_after > 0,
+  proof_require: pvp_elimination_score_delta_post(
+    target_hp_before,
+    target_hp_after,
+    enemy_damage,
+    score_per_elimination,
+    score_delta,
+  ),
+  proof_ensure: score_delta == 0,
+} {
+}
+
+///|
+pub lemma already_defeated_pvp_target_cannot_score_again(
+  target_hp_before : Int,
+  target_hp_after : Int,
+  enemy_damage : Bool,
+  score_per_elimination : Int,
+  score_delta : Int,
+) where {
+  proof_require: target_hp_before <= 0,
+  proof_require: pvp_elimination_score_delta_post(
+    target_hp_before,
+    target_hp_after,
+    enemy_damage,
+    score_per_elimination,
+    score_delta,
+  ),
+  proof_ensure: score_delta == 0,
+} {
+}
+
+///|
+pub lemma accepted_repeated_attack_obeys_cooldown(
+  previous_tick : Int,
+  tick : Int,
+  cooldown_ticks : Int,
+) where {
+  proof_require: pvp_attack_cooldown_allowed_post(
+    previous_tick, true, tick, cooldown_ticks, true,
+  ),
+  proof_ensure: previous_tick >= 0,
+  proof_ensure: tick >= previous_tick,
+  proof_ensure: cooldown_ticks >= 0,
+  proof_ensure: tick - previous_tick >= cooldown_ticks,
+} {
+}
+
+///|
+pub lemma contested_objective_never_scores(
+  occupying_team_count : Int,
+  team_occupies : Bool,
+  score_per_tick : Int,
+  delta : Int,
+) where {
+  proof_require: occupying_team_count != 1,
+  proof_require: pvp_objective_score_delta_post(
+    occupying_team_count, team_occupies, score_per_tick, delta,
+  ),
+  proof_ensure: delta == 0,
+} {
+}
+
+///|
+pub lemma positive_objective_score_requires_single_occupier(
+  occupying_team_count : Int,
+  team_occupies : Bool,
+  score_per_tick : Int,
+  delta : Int,
+) where {
+  proof_require: pvp_objective_score_delta_post(
+    occupying_team_count, team_occupies, score_per_tick, delta,
+  ),
+  proof_require: delta > 0,
+  proof_ensure: occupying_team_count == 1,
+  proof_ensure: team_occupies == true,
+  proof_ensure: score_per_tick > 0,
+  proof_ensure: delta == score_per_tick,
+} {
+}

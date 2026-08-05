@@ -1,0 +1,47 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "converge-game-audit",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-04",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "AUDIT_SHARD",
+				"class_name": "GameAuditShard"
+			}
+		]
+	},
+	"queues": {
+		"producers": [
+			{
+				"binding": "REPLAY_QUEUE",
+				"queue": "converge-game-audit-replay"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "converge-game-audit-replay",
+				"max_batch_size": 10,
+				"max_batch_timeout": 1,
+				"max_retries": 3,
+				"dead_letter_queue": "converge-game-audit-replay-dlq",
+				"retry_delay": 5
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"GameAuditShard"
+			]
+		}
+	]
+}

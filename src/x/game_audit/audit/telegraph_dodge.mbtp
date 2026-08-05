@@ -1,0 +1,352 @@
+///|
+predicate telegraph_dodge_allowed_post(
+  telegraph_valid : Bool,
+  player_evidence_valid : Bool,
+  causally_bound : Bool,
+  reaction_window : Bool,
+  receipt_bound : Bool,
+  movement_legal : Bool,
+  authorization : Bool,
+) {
+  if telegraph_valid {
+    if player_evidence_valid {
+      if causally_bound {
+        if reaction_window {
+          if receipt_bound {
+            authorization == movement_legal
+          } else {
+            authorization == false
+          }
+        } else {
+          authorization == false
+        }
+      } else {
+        authorization == false
+      }
+    } else {
+      authorization == false
+    }
+  } else {
+    authorization == false
+  }
+}
+
+///|
+predicate dodge_reaction_window_post(
+  visible_tick : Int,
+  resolve_tick : Int,
+  min_reaction_ticks : Int,
+  client_tick : Int,
+  accepted : Bool,
+) {
+  if 0 <= min_reaction_ticks {
+    if visible_tick + min_reaction_ticks <= client_tick {
+      if client_tick < resolve_tick {
+        accepted == true
+      } else {
+        accepted == false
+      }
+    } else {
+      accepted == false
+    }
+  } else {
+    accepted == false
+  }
+}
+
+///|
+predicate dodge_receipt_bound_post(
+  client_tick : Int,
+  received_tick : Int,
+  max_backdate_ticks : Int,
+  accepted : Bool,
+) {
+  if 0 <= max_backdate_ticks {
+    if client_tick <= received_tick {
+      if received_tick - client_tick <= max_backdate_ticks {
+        accepted == true
+      } else {
+        accepted == false
+      }
+    } else {
+      accepted == false
+    }
+  } else {
+    accepted == false
+  }
+}
+
+///|
+pub lemma accepted_reaction_is_inside_window(
+  visible_tick : Int,
+  resolve_tick : Int,
+  min_reaction_ticks : Int,
+  client_tick : Int,
+) where {
+  proof_require: dodge_reaction_window_post(
+    visible_tick,
+    resolve_tick,
+    min_reaction_ticks,
+    client_tick,
+    true,
+  ),
+  proof_ensure: 0 <= min_reaction_ticks,
+  proof_ensure: visible_tick + min_reaction_ticks <= client_tick,
+  proof_ensure: client_tick < resolve_tick,
+} {
+}
+
+///|
+pub lemma early_reaction_is_rejected(
+  visible_tick : Int,
+  resolve_tick : Int,
+  min_reaction_ticks : Int,
+  client_tick : Int,
+  accepted : Bool,
+) where {
+  proof_require: 0 <= min_reaction_ticks,
+  proof_require: client_tick < visible_tick + min_reaction_ticks,
+  proof_require: dodge_reaction_window_post(
+    visible_tick,
+    resolve_tick,
+    min_reaction_ticks,
+    client_tick,
+    accepted,
+  ),
+  proof_ensure: accepted == false,
+} {
+}
+
+///|
+pub lemma reaction_at_or_after_resolution_is_rejected(
+  visible_tick : Int,
+  resolve_tick : Int,
+  min_reaction_ticks : Int,
+  client_tick : Int,
+  accepted : Bool,
+) where {
+  proof_require: resolve_tick <= client_tick,
+  proof_require: dodge_reaction_window_post(
+    visible_tick,
+    resolve_tick,
+    min_reaction_ticks,
+    client_tick,
+    accepted,
+  ),
+  proof_ensure: accepted == false,
+} {
+}
+
+///|
+pub lemma accepted_receipt_is_bounded(
+  client_tick : Int,
+  received_tick : Int,
+  max_backdate_ticks : Int,
+) where {
+  proof_require: dodge_receipt_bound_post(
+    client_tick,
+    received_tick,
+    max_backdate_ticks,
+    true,
+  ),
+  proof_ensure: 0 <= max_backdate_ticks,
+  proof_ensure: client_tick <= received_tick,
+  proof_ensure: received_tick - client_tick <= max_backdate_ticks,
+  proof_ensure: received_tick <= client_tick + max_backdate_ticks,
+} {
+}
+
+///|
+pub lemma future_client_tick_is_rejected(
+  client_tick : Int,
+  received_tick : Int,
+  max_backdate_ticks : Int,
+  accepted : Bool,
+) where {
+  proof_require: received_tick < client_tick,
+  proof_require: dodge_receipt_bound_post(
+    client_tick,
+    received_tick,
+    max_backdate_ticks,
+    accepted,
+  ),
+  proof_ensure: accepted == false,
+} {
+}
+
+///|
+pub lemma excessive_backdate_is_rejected(
+  client_tick : Int,
+  received_tick : Int,
+  max_backdate_ticks : Int,
+  accepted : Bool,
+) where {
+  proof_require: max_backdate_ticks < received_tick - client_tick,
+  proof_require: dodge_receipt_bound_post(
+    client_tick,
+    received_tick,
+    max_backdate_ticks,
+    accepted,
+  ),
+  proof_ensure: accepted == false,
+} {
+}
+
+///|
+pub lemma accepted_dodge_requires_every_condition(
+  telegraph_valid : Bool,
+  player_evidence_valid : Bool,
+  causally_bound : Bool,
+  reaction_window : Bool,
+  receipt_bound : Bool,
+  movement_legal : Bool,
+) where {
+  proof_require: telegraph_dodge_allowed_post(
+    telegraph_valid,
+    player_evidence_valid,
+    causally_bound,
+    reaction_window,
+    receipt_bound,
+    movement_legal,
+    true,
+  ),
+  proof_ensure: telegraph_valid == true,
+  proof_ensure: player_evidence_valid == true,
+  proof_ensure: causally_bound == true,
+  proof_ensure: reaction_window == true,
+  proof_ensure: receipt_bound == true,
+  proof_ensure: movement_legal == true,
+} {
+}
+
+///|
+pub lemma invalid_telegraph_rejects_dodge(
+  player_evidence_valid : Bool,
+  causally_bound : Bool,
+  reaction_window : Bool,
+  receipt_bound : Bool,
+  movement_legal : Bool,
+  authorization : Bool,
+) where {
+  proof_require: telegraph_dodge_allowed_post(
+    false,
+    player_evidence_valid,
+    causally_bound,
+    reaction_window,
+    receipt_bound,
+    movement_legal,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma invalid_player_evidence_rejects_dodge(
+  telegraph_valid : Bool,
+  causally_bound : Bool,
+  reaction_window : Bool,
+  receipt_bound : Bool,
+  movement_legal : Bool,
+  authorization : Bool,
+) where {
+  proof_require: telegraph_dodge_allowed_post(
+    telegraph_valid,
+    false,
+    causally_bound,
+    reaction_window,
+    receipt_bound,
+    movement_legal,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma missing_causal_binding_rejects_dodge(
+  telegraph_valid : Bool,
+  player_evidence_valid : Bool,
+  reaction_window : Bool,
+  receipt_bound : Bool,
+  movement_legal : Bool,
+  authorization : Bool,
+) where {
+  proof_require: telegraph_dodge_allowed_post(
+    telegraph_valid,
+    player_evidence_valid,
+    false,
+    reaction_window,
+    receipt_bound,
+    movement_legal,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma outside_reaction_window_rejects_dodge(
+  telegraph_valid : Bool,
+  player_evidence_valid : Bool,
+  causally_bound : Bool,
+  receipt_bound : Bool,
+  movement_legal : Bool,
+  authorization : Bool,
+) where {
+  proof_require: telegraph_dodge_allowed_post(
+    telegraph_valid,
+    player_evidence_valid,
+    causally_bound,
+    false,
+    receipt_bound,
+    movement_legal,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma invalid_receipt_bound_rejects_dodge(
+  telegraph_valid : Bool,
+  player_evidence_valid : Bool,
+  causally_bound : Bool,
+  reaction_window : Bool,
+  movement_legal : Bool,
+  authorization : Bool,
+) where {
+  proof_require: telegraph_dodge_allowed_post(
+    telegraph_valid,
+    player_evidence_valid,
+    causally_bound,
+    reaction_window,
+    false,
+    movement_legal,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma illegal_movement_rejects_dodge(
+  telegraph_valid : Bool,
+  player_evidence_valid : Bool,
+  causally_bound : Bool,
+  reaction_window : Bool,
+  receipt_bound : Bool,
+  authorization : Bool,
+) where {
+  proof_require: telegraph_dodge_allowed_post(
+    telegraph_valid,
+    player_evidence_valid,
+    causally_bound,
+    reaction_window,
+    receipt_bound,
+    false,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}

@@ -1,0 +1,193 @@
+///|
+predicate transfer_transition_allowed_post(
+  asset_exists : Bool,
+  owner_matches : Bool,
+  version_matches : Bool,
+  recipient_valid : Bool,
+  changes_owner : Bool,
+  source_authenticated : Bool,
+  result : Bool,
+) {
+  if asset_exists {
+    if owner_matches {
+      if version_matches {
+        if recipient_valid {
+          if changes_owner {
+            result == source_authenticated
+          } else {
+            result == false
+          }
+        } else {
+          result == false
+        }
+      } else {
+        result == false
+      }
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma authorized_transfer_requires_every_condition(
+  asset_exists : Bool,
+  owner_matches : Bool,
+  version_matches : Bool,
+  recipient_valid : Bool,
+  changes_owner : Bool,
+  source_authenticated : Bool,
+) where {
+  proof_require: transfer_transition_allowed_post(
+    asset_exists,
+    owner_matches,
+    version_matches,
+    recipient_valid,
+    changes_owner,
+    source_authenticated,
+    true,
+  ),
+  proof_ensure: asset_exists == true,
+  proof_ensure: owner_matches == true,
+  proof_ensure: version_matches == true,
+  proof_ensure: recipient_valid == true,
+  proof_ensure: changes_owner == true,
+  proof_ensure: source_authenticated == true,
+} {
+}
+
+///|
+pub lemma missing_asset_rejects_transfer(
+  asset_exists : Bool,
+  owner_matches : Bool,
+  version_matches : Bool,
+  recipient_valid : Bool,
+  changes_owner : Bool,
+  source_authenticated : Bool,
+  authorization : Bool,
+) where {
+  proof_require: transfer_transition_allowed_post(
+    asset_exists,
+    owner_matches,
+    version_matches,
+    recipient_valid,
+    changes_owner,
+    source_authenticated,
+    authorization,
+  ),
+  proof_require: asset_exists == false,
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma owner_mismatch_rejects_transfer(
+  asset_exists : Bool,
+  version_matches : Bool,
+  recipient_valid : Bool,
+  changes_owner : Bool,
+  source_authenticated : Bool,
+  authorization : Bool,
+) where {
+  proof_require: transfer_transition_allowed_post(
+    asset_exists,
+    false,
+    version_matches,
+    recipient_valid,
+    changes_owner,
+    source_authenticated,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma version_mismatch_rejects_transfer(
+  asset_exists : Bool,
+  owner_matches : Bool,
+  recipient_valid : Bool,
+  changes_owner : Bool,
+  source_authenticated : Bool,
+  authorization : Bool,
+) where {
+  proof_require: transfer_transition_allowed_post(
+    asset_exists,
+    owner_matches,
+    false,
+    recipient_valid,
+    changes_owner,
+    source_authenticated,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma invalid_recipient_rejects_transfer(
+  asset_exists : Bool,
+  owner_matches : Bool,
+  version_matches : Bool,
+  changes_owner : Bool,
+  source_authenticated : Bool,
+  authorization : Bool,
+) where {
+  proof_require: transfer_transition_allowed_post(
+    asset_exists,
+    owner_matches,
+    version_matches,
+    false,
+    changes_owner,
+    source_authenticated,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma same_owner_rejects_transfer(
+  asset_exists : Bool,
+  owner_matches : Bool,
+  version_matches : Bool,
+  recipient_valid : Bool,
+  source_authenticated : Bool,
+  authorization : Bool,
+) where {
+  proof_require: transfer_transition_allowed_post(
+    asset_exists,
+    owner_matches,
+    version_matches,
+    recipient_valid,
+    false,
+    source_authenticated,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma missing_source_rejects_transfer(
+  asset_exists : Bool,
+  owner_matches : Bool,
+  version_matches : Bool,
+  recipient_valid : Bool,
+  changes_owner : Bool,
+  authorization : Bool,
+) where {
+  proof_require: transfer_transition_allowed_post(
+    asset_exists,
+    owner_matches,
+    version_matches,
+    recipient_valid,
+    changes_owner,
+    false,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}

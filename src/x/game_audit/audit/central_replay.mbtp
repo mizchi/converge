@@ -1,0 +1,164 @@
+///|
+predicate central_replay_is_boundary_rejection(
+  decision : CentralReplayArtifactDecision,
+) {
+  match decision {
+    RejectReplayBoundary => true
+    _ => false
+  }
+}
+
+///|
+predicate central_replay_is_awaiting_transcript(
+  decision : CentralReplayArtifactDecision,
+) {
+  match decision {
+    AwaitReplayTranscript => true
+    _ => false
+  }
+}
+
+///|
+predicate central_replay_is_link_rejection(
+  decision : CentralReplayArtifactDecision,
+) {
+  match decision {
+    RejectReplayCheckpointLink => true
+    _ => false
+  }
+}
+
+///|
+predicate central_replay_is_incomplete_rejection(
+  decision : CentralReplayArtifactDecision,
+) {
+  match decision {
+    RejectReplayIncomplete => true
+    _ => false
+  }
+}
+
+///|
+predicate central_replay_is_mismatch_rejection(
+  decision : CentralReplayArtifactDecision,
+) {
+  match decision {
+    RejectReplayMismatch => true
+    _ => false
+  }
+}
+
+///|
+predicate central_replay_is_verified(decision : CentralReplayArtifactDecision) {
+  match decision {
+    VerifyCentralReplay => true
+    _ => false
+  }
+}
+
+///|
+predicate central_replay_artifact_post(
+  anchor_matches_job : Bool,
+  transcript_present : Bool,
+  checkpoint_link_valid : Bool,
+  kernel_replay_complete : Bool,
+  kernel_replay_matches : Bool,
+  decision : CentralReplayArtifactDecision,
+) {
+  if !anchor_matches_job {
+    central_replay_is_boundary_rejection(decision)
+  } else {
+    if !transcript_present {
+      central_replay_is_awaiting_transcript(decision)
+    } else {
+      if !checkpoint_link_valid {
+        central_replay_is_link_rejection(decision)
+      } else {
+        if !kernel_replay_complete {
+          central_replay_is_incomplete_rejection(decision)
+        } else {
+          if !kernel_replay_matches {
+            central_replay_is_mismatch_rejection(decision)
+          } else {
+            central_replay_is_verified(decision)
+          }
+        }
+      }
+    }
+  }
+}
+
+///|
+pub lemma verified_central_replay_requires_every_artifact(
+  anchor_matches_job : Bool,
+  transcript_present : Bool,
+  checkpoint_link_valid : Bool,
+  kernel_replay_complete : Bool,
+  kernel_replay_matches : Bool,
+) where {
+  proof_require: central_replay_artifact_post(
+    anchor_matches_job,
+    transcript_present,
+    checkpoint_link_valid,
+    kernel_replay_complete,
+    kernel_replay_matches,
+    VerifyCentralReplay,
+  ),
+  proof_ensure: anchor_matches_job == true,
+  proof_ensure: transcript_present == true,
+  proof_ensure: checkpoint_link_valid == true,
+  proof_ensure: kernel_replay_complete == true,
+  proof_ensure: kernel_replay_matches == true,
+} {
+}
+
+///|
+pub lemma anchor_only_central_job_awaits_transcript(
+  checkpoint_link_valid : Bool,
+  kernel_replay_complete : Bool,
+  kernel_replay_matches : Bool,
+) where {
+  proof_ensure: central_replay_artifact_post(
+    true,
+    false,
+    checkpoint_link_valid,
+    kernel_replay_complete,
+    kernel_replay_matches,
+    AwaitReplayTranscript,
+  ),
+  proof_ensure: central_replay_is_verified(AwaitReplayTranscript) == false,
+} {
+}
+
+///|
+pub lemma foreign_anchor_never_verifies_central_replay(
+  transcript_present : Bool,
+  checkpoint_link_valid : Bool,
+  kernel_replay_complete : Bool,
+  kernel_replay_matches : Bool,
+) where {
+  proof_ensure: central_replay_artifact_post(
+    false,
+    transcript_present,
+    checkpoint_link_valid,
+    kernel_replay_complete,
+    kernel_replay_matches,
+    RejectReplayBoundary,
+  ),
+  proof_ensure: central_replay_is_verified(RejectReplayBoundary) == false,
+} {
+}
+
+///|
+pub lemma kernel_mismatch_never_verifies_central_replay() where {
+  proof_ensure: central_replay_artifact_post(
+    true,
+    true,
+    true,
+    true,
+    false,
+    RejectReplayMismatch,
+  ),
+  proof_ensure: central_replay_is_verified(RejectReplayMismatch) == false,
+} {
+}

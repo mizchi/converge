@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/x/game_audit/pvp_session"
+
+import {
+  "mizchi/converge/bft",
+  "mizchi/converge/x/game_audit/attestation",
+  "mizchi/converge/x/game_audit/checkpoint",
+  "mizchi/converge/x/game_audit/replay",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn prepare_pvp_replay_witness_session(&@bft.Hasher, &@bft.Verifier, @checkpoint.PreparedCheckpoint, @replay.PvpEpochResolution, referee_key~ : @bft.PublicKey, witnesses~ : Array[@attestation.Participant], max_faults~ : Int) -> PvpReplayWitnessSessionBuildResult
+
+pub fn sign_pvp_replay_witness(&@bft.Hasher, &@bft.Signer, @checkpoint.PreparedCheckpoint, @replay.PvpEpochResolution, referee_key~ : @bft.PublicKey, witness_id~ : String, choice~ : @attestation.AttestationChoice) -> PvpReplayWitnessSigningResult
+
+// Errors
+
+// Types and methods
+pub struct PvpReplayWitnessSession {
+  collector : @attestation.ReplayWitnessCollector
+}
+pub fn PvpReplayWitnessSession::certify(Self, @checkpoint.VerifiedCheckpoint) -> @attestation.ReplayWitnessCertificationResult
+pub fn PvpReplayWitnessSession::deliver(Self, @attestation.SignedAttestation) -> @attestation.EvidenceDeliveryResult
+pub fn PvpReplayWitnessSession::required_approvals(Self) -> Int
+
+pub(all) enum PvpReplayWitnessSessionBuildResult {
+  PvpWitnessSessionReady(PvpReplayWitnessSession)
+  PvpWitnessSessionRefused(PvpReplayWitnessSessionRefusal)
+}
+
+pub(all) enum PvpReplayWitnessSessionRefusal {
+  ReplayCheckpointMismatch
+  ReplayRefereeMismatch
+  InvalidGameManifest
+  InvalidRefereeKey
+  InvalidWitnessPolicy
+  InvalidWitnessRoster
+  RefereeIsWitness
+  WitnessManifestMismatch
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PvpReplayWitnessSigningResult {
+  PvpReplayWitnessSigned(@attestation.SignedAttestation)
+  PvpReplayWitnessCheckpointMismatch
+  PvpReplayWitnessRefereeMismatch
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

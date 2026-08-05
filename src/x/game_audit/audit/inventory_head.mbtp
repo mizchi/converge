@@ -1,0 +1,99 @@
+///|
+predicate inventory_head_advance_post(
+  creation_eligible : Bool,
+  proof_verified : Bool,
+  manifest_matches : Bool,
+  parent_matches : Bool,
+  epoch_advances : Bool,
+  owner_version_consistent : Bool,
+  result : Bool,
+) {
+  if creation_eligible {
+    if proof_verified {
+      if manifest_matches {
+        if parent_matches {
+          if epoch_advances {
+            result == owner_version_consistent
+          } else {
+            result == false
+          }
+        } else {
+          result == false
+        }
+      } else {
+        result == false
+      }
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma advanced_inventory_head_requires_every_binding(
+  creation_eligible : Bool,
+  proof_verified : Bool,
+  manifest_matches : Bool,
+  parent_matches : Bool,
+  epoch_advances : Bool,
+  owner_version_consistent : Bool,
+) where {
+  proof_require: inventory_head_advance_post(
+    creation_eligible,
+    proof_verified,
+    manifest_matches,
+    parent_matches,
+    epoch_advances,
+    owner_version_consistent,
+    true,
+  ),
+  proof_ensure: creation_eligible == true,
+  proof_ensure: proof_verified == true,
+  proof_ensure: manifest_matches == true,
+  proof_ensure: parent_matches == true,
+  proof_ensure: epoch_advances == true,
+  proof_ensure: owner_version_consistent == true,
+} {
+}
+
+///|
+pub lemma wrong_parent_never_advances_inventory_head(
+  creation_eligible : Bool,
+  proof_verified : Bool,
+  manifest_matches : Bool,
+  epoch_advances : Bool,
+  owner_version_consistent : Bool,
+) where {
+  proof_ensure: inventory_head_advance_post(
+    creation_eligible,
+    proof_verified,
+    manifest_matches,
+    false,
+    epoch_advances,
+    owner_version_consistent,
+    false,
+  ),
+} {
+}
+
+///|
+pub lemma inconsistent_owner_version_never_advances_inventory_head(
+  creation_eligible : Bool,
+  proof_verified : Bool,
+  manifest_matches : Bool,
+  parent_matches : Bool,
+  epoch_advances : Bool,
+) where {
+  proof_ensure: inventory_head_advance_post(
+    creation_eligible,
+    proof_verified,
+    manifest_matches,
+    parent_matches,
+    epoch_advances,
+    false,
+    false,
+  ),
+} {
+}

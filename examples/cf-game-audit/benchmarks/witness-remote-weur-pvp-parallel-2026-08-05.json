@@ -1,0 +1,101 @@
+{
+  "benchmark": "checkpoint-witness-collection-v1",
+  "generated_at": "2026-08-04T17:35:06.516Z",
+  "environment": {
+    "client": "Tokyo",
+    "runtime": "Cloudflare Workers + SQLite Durable Objects",
+    "location_hint": "weur"
+  },
+  "mode": "pvp",
+  "runs": 20,
+  "crypto": "experimental_sha256_ed25519_unaudited",
+  "source_bucketing": "server_secret_hmac_sha256",
+  "statistics": {
+    "percentile_method": "nearest_rank"
+  },
+  "load": {
+    "source_mode": "single-egress",
+    "approval_mode": "parallel",
+    "hostile_burst_size": 9,
+    "hostile_max_bursts": 3,
+    "hostile_source": "client-egress",
+    "valid_approvals_per_collection": 3,
+    "valid_source": "client-egress-after-retry-after"
+  },
+  "latency": {
+    "collection_start": {
+      "count": 20,
+      "mean_ms": 365.581,
+      "p50_ms": 351.871,
+      "p95_ms": 428.147,
+      "p99_ms": 488.664,
+      "max_ms": 488.664
+    },
+    "hostile_rejection": {
+      "count": 160,
+      "mean_ms": 850.929,
+      "p50_ms": 798.554,
+      "p95_ms": 1318.145,
+      "p99_ms": 1537.148,
+      "max_ms": 1546.861
+    },
+    "hostile_limit": {
+      "count": 20,
+      "mean_ms": 890.142,
+      "p50_ms": 805.812,
+      "p95_ms": 1537.093,
+      "p99_ms": 1672.832,
+      "max_ms": 1672.832
+    },
+    "approval_roundtrip": {
+      "count": 60,
+      "mean_ms": 875.3,
+      "p50_ms": 804.541,
+      "p95_ms": 1338.434,
+      "p99_ms": 1388.86,
+      "max_ms": 1388.86
+    },
+    "quorum_wall": {
+      "count": 20,
+      "mean_ms": 915.483,
+      "p50_ms": 839.169,
+      "p95_ms": 1338.913,
+      "p99_ms": 1389.205,
+      "max_ms": 1389.205
+    },
+    "clean_seal_path": {
+      "count": 20,
+      "mean_ms": 1830.777,
+      "p50_ms": 1777.946,
+      "p95_ms": 2472.4,
+      "p99_ms": 2638.806,
+      "max_ms": 2638.806
+    },
+    "server_collection": {
+      "count": 20,
+      "mean_ms": 2643.35,
+      "p50_ms": 2534,
+      "p95_ms": 3229,
+      "p99_ms": 3380,
+      "max_ms": 3380
+    },
+    "seal": {
+      "count": 20,
+      "mean_ms": 549.714,
+      "p50_ms": 511.523,
+      "p95_ms": 871.746,
+      "p99_ms": 949.042,
+      "max_ms": 949.042
+    }
+  },
+  "payload": {
+    "approval_request": {
+      "count": 60,
+      "mean_bytes": 680.5,
+      "p50_bytes": 679,
+      "p95_bytes": 682,
+      "p99_bytes": 682,
+      "max_bytes": 682
+    }
+  }
+}

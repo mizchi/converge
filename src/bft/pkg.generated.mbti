@@ -7,23 +7,41 @@ import {
 }
 
 // Values
-pub fn serialize_for_hash(@types.Event, Array[Digest]) -> String
+pub fn serialize_for_hash(String, @types.Event, Array[Digest]) -> String
 
 // Errors
 
 // Types and methods
-pub(all) struct BFTAdapter {
+pub struct AuthenticatedEvent {
+  session_id : String
+  digest : Digest
+  author_key : PublicKey
+  event : @types.Event
+} derive(Eq, @debug.Debug)
+pub fn AuthenticatedEvent::author_key(Self) -> PublicKey
+pub fn AuthenticatedEvent::digest(Self) -> Digest
+pub fn AuthenticatedEvent::event(Self) -> @types.Event
+pub fn AuthenticatedEvent::session_id(Self) -> String
+
+pub struct BFTAdapter {
   hasher : &Hasher
   verifier : &Verifier
+  session : String
+  peer_keys : Map[String, PublicKey]
   digest_store : Map[String, Bool]
+  digest_ids : Map[String, @types.EventId]
   event_digests : Map[String, Digest]
   pending_buffer : Array[SignedEvent]
-  flushed_events : Array[@types.Event]
+  flushed_events : Array[AuthenticatedEvent]
+  flushed_alerts : Array[BFTAlert]
 }
 pub fn BFTAdapter::deliver(Self, SignedEvent) -> DeliveryResult
-pub fn BFTAdapter::new(&Hasher, &Verifier) -> Self
+pub fn BFTAdapter::new(&Hasher, &Verifier, session_id~ : String) -> Self
+pub fn BFTAdapter::register_peer(Self, @types.PeerId, PublicKey) -> Bool
+pub fn BFTAdapter::session_id(Self) -> String
 pub fn BFTAdapter::sign(Self, &Signer, @types.Event, Array[Digest]) -> SignedEvent
-pub fn BFTAdapter::take_flushed(Self) -> Array[@types.Event]
+pub fn BFTAdapter::take_flushed(Self) -> Array[AuthenticatedEvent]
+pub fn BFTAdapter::take_flushed_alerts(Self) -> Array[BFTAlert]
 
 pub(all) struct BFTAlert {
   kind : BFTAlertKind
@@ -33,6 +51,10 @@ pub(all) struct BFTAlert {
 } derive(Eq, @debug.Debug)
 
 pub(all) enum BFTAlertKind {
+  SessionMismatch
+  UnknownPeer
+  AuthorKeyMismatch
+  DependencyMismatch
   Equivocation
   HashMismatch
   InvalidSignature
@@ -40,7 +62,7 @@ pub(all) enum BFTAlertKind {
 } derive(Eq, @debug.Debug)
 
 pub(all) enum DeliveryResult {
-  Accepted(@types.Event)
+  Accepted(AuthenticatedEvent)
   Buffered
   Rejected(BFTAlert)
 } derive(Eq, @debug.Debug)
@@ -71,6 +93,7 @@ pub(all) struct PublicKey(String) derive(Eq, Hash, @debug.Debug)
 pub(all) struct Signature(String) derive(Eq, @debug.Debug)
 
 pub(all) struct SignedEvent {
+  session_id : String
   digest : Digest
   signature : Signature
   author_key : PublicKey

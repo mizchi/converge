@@ -1,0 +1,69 @@
+///|
+predicate marketplace_creation_persist_post(
+  open_world_boundary : Bool,
+  central_replay_verified : Bool,
+  summary_normalized : Bool,
+  checkpoint_bound : Bool,
+  conflict_free : Bool,
+  result : Bool,
+) {
+  if open_world_boundary {
+    if central_replay_verified {
+      if summary_normalized {
+        if checkpoint_bound {
+          result == conflict_free
+        } else {
+          result == false
+        }
+      } else {
+        result == false
+      }
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma persisted_marketplace_creation_requires_every_binding(
+  open_world_boundary : Bool,
+  central_replay_verified : Bool,
+  summary_normalized : Bool,
+  checkpoint_bound : Bool,
+  conflict_free : Bool,
+) where {
+  proof_require: marketplace_creation_persist_post(
+    open_world_boundary,
+    central_replay_verified,
+    summary_normalized,
+    checkpoint_bound,
+    conflict_free,
+    true,
+  ),
+  proof_ensure: open_world_boundary == true,
+  proof_ensure: central_replay_verified == true,
+  proof_ensure: summary_normalized == true,
+  proof_ensure: checkpoint_bound == true,
+  proof_ensure: conflict_free == true,
+} {
+}
+
+///|
+pub lemma conflicting_marketplace_creation_never_persists(
+  open_world_boundary : Bool,
+  central_replay_verified : Bool,
+  summary_normalized : Bool,
+  checkpoint_bound : Bool,
+) where {
+  proof_ensure: marketplace_creation_persist_post(
+    open_world_boundary,
+    central_replay_verified,
+    summary_normalized,
+    checkpoint_bound,
+    false,
+    false,
+  ),
+} {
+}

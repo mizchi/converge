@@ -13,3 +13,7 @@ keywords = [ "crdt", "local-first", "sync", "eg-walker", "lww" ]
 description = "CRDT-based local-first sync engine inspired by EG-Walker"
 
 source = "src"
+
+import {
+  "mizchi/experimental_crypto@0.0.2",
+}

@@ -1,0 +1,285 @@
+///|
+predicate open_world_wire_is_admitted(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    AdmitOpenWorldWirePayload => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_rejects_byte_budget(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    RejectOpenWorldWireByteBudget => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_rejects_canonical_encoding(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    RejectOpenWorldWireCanonicalEncoding => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_rejects_version(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    RejectOpenWorldWireVersion => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_rejects_shape(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    RejectOpenWorldWireShape => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_rejects_text_budget(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    RejectOpenWorldWireTextBudget => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_rejects_proof_budget(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    RejectOpenWorldWireProofBudget => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_rejects_item_budget(
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  match decision {
+    RejectOpenWorldWireItemBudget => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_wire_admission_post(
+  bytes_within_budget : Bool,
+  canonical_encoding : Bool,
+  supported_version : Bool,
+  shape_valid : Bool,
+  text_within_budget : Bool,
+  proof_within_budget : Bool,
+  items_within_budget : Bool,
+  decision : OpenWorldWireAdmissionDecision,
+) {
+  if !bytes_within_budget {
+    open_world_wire_rejects_byte_budget(decision)
+  } else {
+    if !canonical_encoding {
+      open_world_wire_rejects_canonical_encoding(decision)
+    } else {
+      if !supported_version {
+        open_world_wire_rejects_version(decision)
+      } else {
+        if !shape_valid {
+          open_world_wire_rejects_shape(decision)
+        } else {
+          if !text_within_budget {
+            open_world_wire_rejects_text_budget(decision)
+          } else {
+            if !proof_within_budget {
+              open_world_wire_rejects_proof_budget(decision)
+            } else {
+              if !items_within_budget {
+                open_world_wire_rejects_item_budget(decision)
+              } else {
+                open_world_wire_is_admitted(decision)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+///|
+pub lemma admitted_open_world_wire_requires_every_condition(
+  bytes_within_budget : Bool,
+  canonical_encoding : Bool,
+  supported_version : Bool,
+  shape_valid : Bool,
+  text_within_budget : Bool,
+  proof_within_budget : Bool,
+  items_within_budget : Bool,
+  decision : OpenWorldWireAdmissionDecision,
+) where {
+  proof_require: open_world_wire_admission_post(
+    bytes_within_budget,
+    canonical_encoding,
+    supported_version,
+    shape_valid,
+    text_within_budget,
+    proof_within_budget,
+    items_within_budget,
+    decision,
+  ),
+  proof_require: open_world_wire_is_admitted(decision),
+  proof_ensure: bytes_within_budget == true,
+  proof_ensure: canonical_encoding == true,
+  proof_ensure: supported_version == true,
+  proof_ensure: shape_valid == true,
+  proof_ensure: text_within_budget == true,
+  proof_ensure: proof_within_budget == true,
+  proof_ensure: items_within_budget == true,
+} {
+}
+
+///|
+pub lemma oversized_open_world_wire_is_rejected(
+  canonical_encoding : Bool,
+  supported_version : Bool,
+  shape_valid : Bool,
+  text_within_budget : Bool,
+  proof_within_budget : Bool,
+  items_within_budget : Bool,
+) where {
+  proof_ensure: open_world_wire_admission_post(
+    false,
+    canonical_encoding,
+    supported_version,
+    shape_valid,
+    text_within_budget,
+    proof_within_budget,
+    items_within_budget,
+    RejectOpenWorldWireByteBudget,
+  ),
+} {
+}
+
+///|
+pub lemma noncanonical_open_world_wire_is_rejected(
+  supported_version : Bool,
+  shape_valid : Bool,
+  text_within_budget : Bool,
+  proof_within_budget : Bool,
+  items_within_budget : Bool,
+) where {
+  proof_ensure: open_world_wire_admission_post(
+    true,
+    false,
+    supported_version,
+    shape_valid,
+    text_within_budget,
+    proof_within_budget,
+    items_within_budget,
+    RejectOpenWorldWireCanonicalEncoding,
+  ),
+} {
+}
+
+///|
+pub lemma unsupported_open_world_wire_version_is_rejected(
+  shape_valid : Bool,
+  text_within_budget : Bool,
+  proof_within_budget : Bool,
+  items_within_budget : Bool,
+) where {
+  proof_ensure: open_world_wire_admission_post(
+    true,
+    true,
+    false,
+    shape_valid,
+    text_within_budget,
+    proof_within_budget,
+    items_within_budget,
+    RejectOpenWorldWireVersion,
+  ),
+} {
+}
+
+///|
+pub lemma malformed_open_world_wire_shape_is_rejected(
+  text_within_budget : Bool,
+  proof_within_budget : Bool,
+  items_within_budget : Bool,
+) where {
+  proof_ensure: open_world_wire_admission_post(
+    true,
+    true,
+    true,
+    false,
+    text_within_budget,
+    proof_within_budget,
+    items_within_budget,
+    RejectOpenWorldWireShape,
+  ),
+} {
+}
+
+///|
+pub lemma oversized_open_world_wire_text_is_rejected(
+  proof_within_budget : Bool,
+  items_within_budget : Bool,
+) where {
+  proof_ensure: open_world_wire_admission_post(
+    true,
+    true,
+    true,
+    true,
+    false,
+    proof_within_budget,
+    items_within_budget,
+    RejectOpenWorldWireTextBudget,
+  ),
+} {
+}
+
+///|
+pub lemma oversized_open_world_wire_proof_is_rejected(
+  items_within_budget : Bool,
+) where {
+  proof_ensure: open_world_wire_admission_post(
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+    items_within_budget,
+    RejectOpenWorldWireProofBudget,
+  ),
+} {
+}
+
+///|
+pub lemma oversized_open_world_wire_item_page_is_rejected() where {
+  proof_ensure: open_world_wire_admission_post(
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+    RejectOpenWorldWireItemBudget,
+  ),
+} {
+}

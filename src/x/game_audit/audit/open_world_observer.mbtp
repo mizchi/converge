@@ -1,0 +1,150 @@
+///|
+predicate open_world_observer_policy_holds(
+  observer_count : Int,
+  max_faults : Int,
+) {
+  max_faults >= 0 && observer_count > 3 * max_faults
+}
+
+///|
+predicate open_world_observer_policy_is_invalid(
+  observer_count : Int,
+  max_faults : Int,
+) {
+  if max_faults >= 0 {
+    observer_count <= 3 * max_faults
+  } else {
+    true
+  }
+}
+
+///|
+predicate open_world_observer_policy_valid_post(
+  observer_count : Int,
+  max_faults : Int,
+  result : Bool,
+) {
+  if max_faults >= 0 {
+    result == (observer_count > 3 * max_faults)
+  } else {
+    result == false
+  }
+}
+
+///|
+predicate open_world_observer_quorum_size_post(
+  observer_count : Int,
+  max_faults : Int,
+  result : Int,
+) {
+  result == observer_count - max_faults
+}
+
+///|
+predicate open_world_observer_certificate_allowed_post(
+  observer_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+  result : Bool,
+) {
+  if open_world_observer_policy_holds(observer_count, max_faults) {
+    if approval_count >= observer_count - max_faults {
+      result == (approval_count <= observer_count)
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma accepted_open_world_observer_certificate_has_valid_policy(
+  observer_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+) where {
+  proof_require: open_world_observer_certificate_allowed_post(
+    observer_count,
+    max_faults,
+    approval_count,
+    true,
+  ),
+  proof_ensure: open_world_observer_policy_holds(observer_count, max_faults),
+} {
+}
+
+///|
+pub lemma accepted_open_world_observer_certificate_has_quorum(
+  observer_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+) where {
+  proof_require: open_world_observer_certificate_allowed_post(
+    observer_count,
+    max_faults,
+    approval_count,
+    true,
+  ),
+  proof_ensure: approval_count >= observer_count - max_faults,
+  proof_ensure: approval_count <= observer_count,
+} {
+}
+
+///|
+pub lemma open_world_observer_quorum_exceeds_fault_bound(
+  observer_count : Int,
+  max_faults : Int,
+) where {
+  proof_require: open_world_observer_policy_holds(observer_count, max_faults),
+  proof_ensure: observer_count - max_faults > max_faults,
+} {
+}
+
+///|
+pub lemma open_world_observer_quorums_intersect_beyond_fault_bound(
+  observer_count : Int,
+  max_faults : Int,
+) where {
+  proof_require: open_world_observer_policy_holds(observer_count, max_faults),
+  proof_ensure: 2 * (observer_count - max_faults) - observer_count > max_faults,
+} {
+}
+
+///|
+pub lemma open_world_observer_under_quorum_fails_closed(
+  observer_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+  outcome : Bool,
+) where {
+  proof_require: approval_count < observer_count - max_faults,
+  proof_require: open_world_observer_certificate_allowed_post(
+    observer_count,
+    max_faults,
+    approval_count,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}
+
+///|
+pub lemma invalid_open_world_observer_policy_fails_closed(
+  observer_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+  outcome : Bool,
+) where {
+  proof_require: open_world_observer_policy_is_invalid(
+    observer_count, max_faults,
+  ),
+  proof_require: open_world_observer_certificate_allowed_post(
+    observer_count,
+    max_faults,
+    approval_count,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}

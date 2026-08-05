@@ -1,0 +1,213 @@
+///|
+#proof_import("int.NumOf")
+fn raw_numof(p : (Int) -> Bool, a : Int, b : Int) -> Int = "numof"
+
+///|
+fn approval_count_upto(approvals : FixedArray[Bool], upto : Int) -> Int {
+  raw_numof(fn(i : Int) { approvals[i] == true }, 0, upto)
+}
+
+///|
+fn approval_count(approvals : FixedArray[Bool]) -> Int {
+  approval_count_upto(approvals, approvals.length())
+}
+
+///|
+predicate count_approvals_post(approvals : FixedArray[Bool], result : Int) {
+  result == approval_count(approvals)
+}
+
+///|
+predicate is_pending(decision : CheckpointDecision) {
+  match decision {
+    Pending => true
+    _ => false
+  }
+}
+
+///|
+predicate is_attested(decision : CheckpointDecision) {
+  match decision {
+    Attested => true
+    _ => false
+  }
+}
+
+///|
+predicate is_challenged(decision : CheckpointDecision) {
+  match decision {
+    Challenged => true
+    _ => false
+  }
+}
+
+///|
+predicate is_finalized(decision : CheckpointDecision) {
+  match decision {
+    Finalized => true
+    _ => false
+  }
+}
+
+///|
+predicate is_rejected(decision : CheckpointDecision) {
+  match decision {
+    Rejected => true
+    _ => false
+  }
+}
+
+///|
+predicate authority_accepts(authority : AuthorityVerdict) {
+  match authority {
+    Accept => true
+    _ => false
+  }
+}
+
+///|
+predicate has_participant_quorum(
+  approvals : FixedArray[Bool],
+  required_approvals : Int,
+) {
+  required_approvals > 0 &&
+  required_approvals <= approvals.length() &&
+  approval_count(approvals) >= required_approvals
+}
+
+///|
+predicate decide_checkpoint_post(
+  approvals : FixedArray[Bool],
+  required_approvals : Int,
+  challenged : Bool,
+  authority : AuthorityVerdict,
+  replay_matches : Bool,
+  result : CheckpointDecision,
+) {
+  match authority {
+    Reject => is_rejected(result)
+    Accept =>
+      if replay_matches ||
+        (!challenged && has_participant_quorum(approvals, required_approvals)) {
+        is_finalized(result)
+      } else {
+        if challenged {
+          is_challenged(result)
+        } else {
+          is_pending(result)
+        }
+      }
+    NoVerdict =>
+      if challenged {
+        is_challenged(result)
+      } else {
+        if has_participant_quorum(approvals, required_approvals) {
+          is_attested(result)
+        } else {
+          is_pending(result)
+        }
+      }
+  }
+}
+
+///|
+predicate market_accepts_post(
+  decision : CheckpointDecision,
+  item_included : Bool,
+  rejected_ancestor : Bool,
+  result : Bool,
+) {
+  result == match decision {
+    Finalized => item_included && !rejected_ancestor
+    _ => false
+  }
+}
+
+///|
+predicate market_acceptance_safe(
+  decision : CheckpointDecision,
+  item_included : Bool,
+  rejected_ancestor : Bool,
+) {
+  match decision {
+    Finalized => item_included && !rejected_ancestor
+    _ => false
+  }
+}
+
+///|
+pub lemma finalized_requires_authority(
+  approvals : FixedArray[Bool],
+  required_approvals : Int,
+  challenged : Bool,
+  authority : AuthorityVerdict,
+  replay_matches : Bool,
+) where {
+  proof_require: 0 <= required_approvals,
+  proof_require: required_approvals <= approvals.length(),
+  proof_require: decide_checkpoint_post(
+    approvals,
+    required_approvals,
+    challenged,
+    authority,
+    replay_matches,
+    Finalized,
+  ),
+  proof_ensure: authority_accepts(authority),
+} {
+}
+
+///|
+pub lemma challenged_finalization_requires_replay(
+  approvals : FixedArray[Bool],
+  required_approvals : Int,
+  authority : AuthorityVerdict,
+  replay_matches : Bool,
+) where {
+  proof_require: 0 <= required_approvals,
+  proof_require: required_approvals <= approvals.length(),
+  proof_require: decide_checkpoint_post(
+    approvals,
+    required_approvals,
+    true,
+    authority,
+    replay_matches,
+    Finalized,
+  ),
+  proof_ensure: replay_matches == true,
+} {
+}
+
+///|
+pub lemma market_acceptance_is_fail_closed(
+  decision : CheckpointDecision,
+  item_included : Bool,
+  rejected_ancestor : Bool,
+) where {
+  proof_require: market_accepts_post(
+    decision,
+    item_included,
+    rejected_ancestor,
+    true,
+  ),
+  proof_ensure: market_acceptance_safe(decision, item_included, rejected_ancestor),
+} {
+}
+
+///|
+pub lemma zero_threshold_has_no_participant_quorum(
+  approvals : FixedArray[Bool],
+) where {
+  proof_ensure: has_participant_quorum(approvals, 0) == false,
+} {
+}
+
+///|
+pub lemma oversized_threshold_has_no_participant_quorum(
+  approvals : FixedArray[Bool],
+  required_approvals : Int,
+) where {
+  proof_require: required_approvals > approvals.length(),
+  proof_ensure: has_participant_quorum(approvals, required_approvals) == false,
+} {
+}

@@ -1,0 +1,107 @@
+///|
+predicate audit_event_time_is_accepted(decision : AuditEventTimeDecision) {
+  match decision {
+    AuditEventTimeAccepted => true
+    _ => false
+  }
+}
+
+///|
+predicate audit_event_time_decision_post(
+  origin_ms : Int,
+  watermark_ms : Int,
+  event_time_ms : Int,
+  decision : AuditEventTimeDecision,
+) {
+  if watermark_ms < origin_ms {
+    match decision {
+      InvalidAuditWatermark => true
+      _ => false
+    }
+  } else {
+    if event_time_ms < origin_ms {
+      match decision {
+        AuditEventBeforeOrigin => true
+        _ => false
+      }
+    } else {
+      if event_time_ms < watermark_ms {
+        match decision {
+          AuditEventBehindWatermark => true
+          _ => false
+        }
+      } else {
+        audit_event_time_is_accepted(decision)
+      }
+    }
+  }
+}
+
+///|
+pub lemma accepted_audit_event_time_is_not_late(
+  origin_ms : Int,
+  watermark_ms : Int,
+  event_time_ms : Int,
+) where {
+  proof_require: audit_event_time_decision_post(
+    origin_ms,
+    watermark_ms,
+    event_time_ms,
+    AuditEventTimeAccepted,
+  ),
+  proof_ensure: watermark_ms >= origin_ms,
+  proof_ensure: event_time_ms >= origin_ms,
+  proof_ensure: event_time_ms >= watermark_ms,
+} {
+}
+
+///|
+pub lemma event_before_audit_watermark_is_refused(
+  origin_ms : Int,
+  watermark_ms : Int,
+  event_time_ms : Int,
+) where {
+  proof_require: watermark_ms >= origin_ms,
+  proof_require: event_time_ms >= origin_ms,
+  proof_require: event_time_ms < watermark_ms,
+  proof_ensure: audit_event_time_decision_post(
+    origin_ms,
+    watermark_ms,
+    event_time_ms,
+    AuditEventBehindWatermark,
+  ),
+  proof_ensure: audit_event_time_is_accepted(AuditEventBehindWatermark) == false,
+} {
+}
+
+///|
+pub lemma event_at_audit_watermark_is_accepted(
+  origin_ms : Int,
+  watermark_ms : Int,
+) where {
+  proof_require: watermark_ms >= origin_ms,
+  proof_ensure: audit_event_time_decision_post(
+    origin_ms,
+    watermark_ms,
+    watermark_ms,
+    AuditEventTimeAccepted,
+  ),
+} {
+}
+
+///|
+pub lemma invalid_audit_watermark_refuses_event_time(
+  origin_ms : Int,
+  watermark_ms : Int,
+  event_time_ms : Int,
+) where {
+  proof_require: watermark_ms < origin_ms,
+  proof_ensure: audit_event_time_decision_post(
+    origin_ms,
+    watermark_ms,
+    event_time_ms,
+    InvalidAuditWatermark,
+  ),
+  proof_ensure: audit_event_time_is_accepted(InvalidAuditWatermark) == false,
+} {
+}

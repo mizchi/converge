@@ -1,0 +1,459 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/audit/runtime"
+
+import {
+  "mizchi/converge/audit/commitment",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn acknowledge_checkpoint_outbox(CheckpointOutboxEntry, AuthenticatedCheckpointAck) -> CheckpointOutboxAckResult
+
+pub fn claim_checkpoint_outbox(CheckpointOutboxEntry, now_ms~ : Int, lease_duration_ms~ : Int) -> CheckpointOutboxClaimResult
+
+pub fn open_authenticated_checkpoint_ack(CheckpointAckEvidence, authentication_succeeded~ : Bool) -> CheckpointAckOpenResult
+
+pub fn open_checkpoint_outbox_entry(boundary~ : AuditBoundary, destination_id~ : String, epoch~ : Int, checkpoint_digest~ : @commitment.AuditDigest, canonical_envelope~ : String, created_order~ : Int) -> CheckpointOutboxOpenResult
+
+pub fn open_player_local_audit_store(boundary~ : AuditBoundary, genesis_digest~ : @commitment.AuditDigest, outbox_capacity~ : Int) -> PlayerLocalAuditStoreOpenResult
+
+pub fn open_trusted_epoch_closure(EpochClosureEvidence, frontier_complete~ : Bool, conflict_free~ : Bool, quorum_satisfied~ : Bool) -> EpochClosureOpenResult
+
+pub fn prepare_atomic_checkpoint_seal(CheckpointSealStorageSnapshot, CheckpointSealDraft, TrustedEpochClosure, Array[String]) -> AtomicCheckpointSealResult
+
+pub fn record_peer_delivery_failure(PeerRouteState, now_ms~ : Int, attempt_order~ : Int, base_backoff_ms~ : Int, max_backoff_ms~ : Int) -> PeerRouteUpdateResult
+
+pub fn record_peer_delivery_success(PeerRouteState, attempt_order~ : Int) -> PeerRouteUpdateResult
+
+pub fn release_checkpoint_outbox(CheckpointOutboxEntry) -> CheckpointOutboxReleaseResult
+
+pub fn restore_player_local_audit_store(PlayerLocalAuditImage) -> PlayerLocalAuditStoreOpenResult
+
+pub fn select_oldest_retryable_checkpoint(Array[CheckpointOutboxEntry], boundary~ : AuditBoundary, destination_id~ : String, now_ms~ : Int) -> RetrySelectionResult
+
+pub fn select_peer_checkpoint_response(Array[PeerCheckpointResponse], expected_digest~ : @commitment.AuditDigest) -> PeerCheckpointResponseSelection
+
+pub fn select_peer_delivery_batch(Array[PeerRouteState], now_ms~ : Int, in_flight_count~ : Int, max_in_flight~ : Int, max_parallel~ : Int) -> PeerDeliverySelectionResult
+
+// Errors
+
+// Types and methods
+pub struct AtomicCheckpointSealPlan {
+  expected_snapshot_value : CheckpointSealStorageSnapshot
+  checkpoint_value : CheckpointSealDraft
+  next_head_value : CheckpointSealHead
+  outbox_entries_value : Array[CheckpointOutboxEntry]
+  consumed_closure_epoch_value : Int
+  next_outbox_entry_count_value : Int
+  next_created_order_value : Int
+} derive(Eq, @debug.Debug)
+pub fn AtomicCheckpointSealPlan::checkpoint(Self) -> CheckpointSealDraft
+pub fn AtomicCheckpointSealPlan::consumed_closure_epoch(Self) -> Int
+pub fn AtomicCheckpointSealPlan::expected_snapshot(Self) -> CheckpointSealStorageSnapshot
+pub fn AtomicCheckpointSealPlan::next_created_order(Self) -> Int
+pub fn AtomicCheckpointSealPlan::next_head(Self) -> CheckpointSealHead
+pub fn AtomicCheckpointSealPlan::next_outbox_entry_count(Self) -> Int
+pub fn AtomicCheckpointSealPlan::outbox_entries(Self) -> Array[CheckpointOutboxEntry]
+
+pub(all) enum AtomicCheckpointSealResult {
+  AtomicCheckpointSealPrepared(AtomicCheckpointSealPlan)
+  CheckpointSealAlreadyCommitted
+  CheckpointSealConflict(CheckpointSealConflictReason)
+  CheckpointSealRefused(CheckpointSealRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct AuditBoundary {
+  protocol_version : Int
+  purpose : String
+  manifest_digest : @commitment.AuditDigest
+  scope_id : String
+  unit_id : String
+} derive(Eq, @debug.Debug)
+
+pub struct AuthenticatedCheckpointAck {
+  evidence_value : CheckpointAckEvidence
+} derive(Eq, @debug.Debug)
+pub fn AuthenticatedCheckpointAck::evidence(Self) -> CheckpointAckEvidence
+
+pub(all) enum CheckpointAckDecision {
+  CheckpointAccepted
+  CheckpointDuplicate
+  CheckpointGap
+  CheckpointSameEpochFork
+  CheckpointParentFork
+  CheckpointStaleUnknown
+  CheckpointBoundaryMismatch
+  CheckpointRefused
+} derive(Eq, @debug.Debug)
+
+pub(all) struct CheckpointAckEvidence {
+  boundary : AuditBoundary
+  authority_id : String
+  epoch : Int
+  checkpoint_digest : @commitment.AuditDigest
+  decision : CheckpointAckDecision
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointAckOpenResult {
+  CheckpointAckReady(AuthenticatedCheckpointAck)
+  CheckpointAckRefused(CheckpointAckRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointAckRefusal {
+  InvalidAckBoundary
+  EmptyAckAuthorityId
+  NegativeAckEpoch
+  EmptyAckDigest
+  AckAuthenticationFailed
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointOutboxAckResult {
+  OutboxAcknowledged(CheckpointOutboxEntry)
+  OutboxAlreadyAcknowledged
+  OutboxAckRefused(OutboxAckRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointOutboxClaimResult {
+  OutboxClaimed(CheckpointOutboxEntry)
+  OutboxNotRetryable
+  OutboxClaimRefused(OutboxClaimRefusal)
+} derive(Eq, @debug.Debug)
+
+pub struct CheckpointOutboxEntry {
+  boundary_value : AuditBoundary
+  destination_id_value : String
+  epoch_value : Int
+  checkpoint_digest_value : @commitment.AuditDigest
+  canonical_envelope_value : String
+  created_order_value : Int
+  state_value : CheckpointOutboxState
+} derive(Eq, @debug.Debug)
+pub fn CheckpointOutboxEntry::boundary(Self) -> AuditBoundary
+pub fn CheckpointOutboxEntry::canonical_envelope(Self) -> String
+pub fn CheckpointOutboxEntry::checkpoint_digest(Self) -> @commitment.AuditDigest
+pub fn CheckpointOutboxEntry::created_order(Self) -> Int
+pub fn CheckpointOutboxEntry::destination_id(Self) -> String
+pub fn CheckpointOutboxEntry::epoch(Self) -> Int
+pub fn CheckpointOutboxEntry::state(Self) -> CheckpointOutboxState
+
+pub(all) enum CheckpointOutboxOpenResult {
+  OutboxEntryReady(CheckpointOutboxEntry)
+  OutboxEntryRefused(OutboxEntryRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointOutboxReleaseResult {
+  OutboxReleased(CheckpointOutboxEntry)
+  OutboxReleaseNoop
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointOutboxState {
+  OutboxPending
+  OutboxInFlight(Int)
+  OutboxAcknowledgedState
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointSealConflictReason {
+  SealSameEpochFork
+  SealParentFork
+  SealIncompleteKnownCommit
+} derive(Eq, @debug.Debug)
+
+pub(all) struct CheckpointSealDraft {
+  boundary : AuditBoundary
+  epoch : Int
+  previous_checkpoint : @commitment.AuditDigest
+  checkpoint_digest : @commitment.AuditDigest
+  canonical_envelope : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct CheckpointSealHead {
+  boundary : AuditBoundary
+  epoch : Int
+  checkpoint_digest : @commitment.AuditDigest
+} derive(Eq, @debug.Debug)
+
+pub(all) enum CheckpointSealRefusal {
+  SealInvalidStorageSnapshot
+  SealInvalidCheckpointDraft
+  SealBoundaryMismatch
+  SealClosureEpochMismatch
+  SealClosureAlreadyConsumed
+  SealEpochGap
+  SealStaleEpoch
+  SealDestinationsEmpty
+  SealDestinationEmpty
+  SealDestinationDuplicate
+  SealOutboxCapacityExceeded
+  SealCreatedOrderOverflow
+} derive(Eq, @debug.Debug)
+
+pub(all) struct CheckpointSealStorageSnapshot {
+  boundary : AuditBoundary
+  current_epoch : Int
+  current_digest : @commitment.AuditDigest
+  incoming_epoch_known : Bool
+  known_digest_matches : Bool
+  known_seal_complete : Bool
+  closure_consumed : Bool
+  outbox_entry_count : Int
+  outbox_capacity : Int
+  next_created_order : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum EpochClosureConflictReason {
+  EquivocationDetected
+} derive(Eq, @debug.Debug)
+
+pub(all) struct EpochClosureEvidence {
+  boundary : AuditBoundary
+  epoch : Int
+  roster_digest : @commitment.AuditDigest
+  frontier_digest : @commitment.AuditDigest
+  certificate_digest : @commitment.AuditDigest
+} derive(Eq, @debug.Debug)
+
+pub(all) enum EpochClosureOpenResult {
+  EpochClosureReady(TrustedEpochClosure)
+  EpochClosurePending(EpochClosurePendingReason)
+  EpochClosureConflict(EpochClosureConflictReason)
+  EpochClosureRefused(EpochClosureRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum EpochClosurePendingReason {
+  MissingFrontierEvents
+  UnderQuorum
+} derive(Eq, @debug.Debug)
+
+pub(all) enum EpochClosureRefusal {
+  NonPositiveProtocolVersion
+  EmptyPurpose
+  EmptyManifestDigest
+  EmptyScopeId
+  EmptyUnitId
+  NegativeClosureEpoch
+  EmptyRosterDigest
+  EmptyFrontierDigest
+  EmptyCertificateDigest
+} derive(Eq, @debug.Debug)
+
+pub(all) enum OutboxAckRefusal {
+  AckAuthorityMismatch
+  AckBoundaryMismatch
+  AckEpochMismatch
+  AckDigestMismatch
+  AckDecisionNotSuccessful
+} derive(Eq, @debug.Debug)
+
+pub(all) enum OutboxClaimRefusal {
+  NegativeClaimTime
+  NonPositiveLeaseDuration
+  LeaseDeadlineOverflow
+} derive(Eq, @debug.Debug)
+
+pub(all) enum OutboxEntryRefusal {
+  InvalidOutboxBoundary
+  EmptyDestinationId
+  NegativeCheckpointEpoch
+  EmptyCheckpointDigest
+  EmptyCanonicalEnvelope
+  NegativeCreatedOrder
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PeerCheckpointResponse {
+  peer_id : String
+  checkpoint_digest : @commitment.AuditDigest
+  authenticated : Bool
+  received_at_ms : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PeerCheckpointResponseSelection {
+  PeerCheckpointResponseAccepted(Int)
+  PeerCheckpointResponseUnavailable
+  PeerCheckpointForkDetected(Int)
+  PeerCheckpointResponseRefused
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PeerDeliveryRefusal {
+  InvalidPeerDeliveryWindow
+  InvalidPeerRoute(Int)
+  DuplicatePeerRoute
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PeerDeliverySelectionResult {
+  PeerDeliverySelected(Array[Int])
+  PeerDeliveryUnavailable
+  PeerDeliveryBackpressured
+  PeerDeliveryRefused(PeerDeliveryRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PeerRouteState {
+  peer_id : String
+  available : Bool
+  quarantined : Bool
+  failures : Int
+  next_retry_at_ms : Int
+  last_attempt_order : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PeerRouteUpdateResult {
+  PeerRouteUpdated(PeerRouteState)
+  PeerRouteUpdateRefused
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PlayerLocalAuditEvent {
+  boundary : AuditBoundary
+  author_id : String
+  counter : Int
+  epoch : Int
+  event_digest : @commitment.AuditDigest
+  canonical_event : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PlayerLocalAuditImage {
+  boundary : AuditBoundary
+  genesis_digest : @commitment.AuditDigest
+  outbox_capacity : Int
+  events : Array[PlayerLocalAuditEvent]
+  equivocations : Array[PlayerLocalEventEquivocation]
+  checkpoints : Array[CheckpointSealDraft]
+  head : CheckpointSealHead
+  consumed_closure_epochs : Array[Int]
+  outbox : Array[PlayerLocalCheckpointOutboxRecord]
+  ack_history : Array[CheckpointAckEvidence]
+  next_created_order : Int
+  storage_revision : Int
+} derive(Eq, @debug.Debug)
+
+pub struct PlayerLocalAuditStore {
+  boundary_value : AuditBoundary
+  genesis_digest_value : @commitment.AuditDigest
+  outbox_capacity_value : Int
+  events_value : Array[PlayerLocalAuditEvent]
+  equivocations_value : Array[PlayerLocalEventEquivocation]
+  checkpoints_value : Array[CheckpointSealDraft]
+  mut head_value : CheckpointSealHead
+  consumed_closure_epochs_value : Array[Int]
+  outbox_value : Array[CheckpointOutboxEntry]
+  ack_history_value : Array[CheckpointAckEvidence]
+  mut next_created_order_value : Int
+  mut storage_revision_value : Int
+}
+pub fn PlayerLocalAuditStore::acknowledge_outbox_at(Self, Int, AuthenticatedCheckpointAck) -> PlayerLocalOutboxUpdateResult
+pub fn PlayerLocalAuditStore::admit_event(Self, PlayerLocalAuditEvent) -> PlayerLocalEventAdmission
+pub fn PlayerLocalAuditStore::checkpoint_count(Self) -> Int
+pub fn PlayerLocalAuditStore::claim_outbox_at(Self, Int, now_ms~ : Int, lease_duration_ms~ : Int) -> PlayerLocalOutboxUpdateResult
+pub fn PlayerLocalAuditStore::closure_consumed(Self, Int) -> Bool
+pub fn PlayerLocalAuditStore::commit_seal(Self, PlayerLocalSealPlan) -> PlayerLocalSealCommitResult
+pub fn PlayerLocalAuditStore::durable_image(Self) -> PlayerLocalAuditImage
+pub fn PlayerLocalAuditStore::equivocation_count(Self) -> Int
+pub fn PlayerLocalAuditStore::event_count(Self) -> Int
+pub fn PlayerLocalAuditStore::head(Self) -> CheckpointSealHead
+pub fn PlayerLocalAuditStore::outbox_entries(Self) -> Array[CheckpointOutboxEntry]
+pub fn PlayerLocalAuditStore::prepare_seal(Self, CheckpointSealDraft, TrustedEpochClosure, Array[String]) -> PlayerLocalSealPrepareResult
+pub fn PlayerLocalAuditStore::release_outbox_at(Self, Int) -> PlayerLocalOutboxUpdateResult
+pub fn PlayerLocalAuditStore::seal_snapshot(Self, CheckpointSealDraft, Array[String]) -> CheckpointSealStorageSnapshot
+
+pub(all) enum PlayerLocalAuditStoreOpenResult {
+  PlayerLocalAuditStoreReady(PlayerLocalAuditStore)
+  PlayerLocalAuditStoreRefused(PlayerLocalAuditStoreRefusal)
+}
+
+pub(all) enum PlayerLocalAuditStoreRefusal {
+  LocalStoreInvalidBoundary
+  LocalStoreMissingGenesis
+  LocalStoreInvalidOutboxCapacity
+  LocalStoreInvalidImage
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PlayerLocalCheckpointOutboxRecord {
+  boundary : AuditBoundary
+  destination_id : String
+  epoch : Int
+  checkpoint_digest : @commitment.AuditDigest
+  canonical_envelope : String
+  created_order : Int
+  state : CheckpointOutboxState
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PlayerLocalEventAdmission {
+  LocalEventStored
+  LocalEventDuplicate
+  LocalEventEquivocation
+  LocalEventRefused(PlayerLocalEventRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PlayerLocalEventEquivocation {
+  accepted : PlayerLocalAuditEvent
+  conflicting : PlayerLocalAuditEvent
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PlayerLocalEventRefusal {
+  LocalEventInvalidBoundary
+  LocalEventBoundaryMismatch
+  LocalEventMissingAuthor
+  LocalEventNegativeCounter
+  LocalEventNegativeEpoch
+  LocalEventMissingDigest
+  LocalEventMissingCanonicalBytes
+  LocalEventDigestCollision
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PlayerLocalOutboxUpdateResult {
+  PlayerLocalOutboxUpdated(CheckpointOutboxEntry)
+  PlayerLocalOutboxNoChange
+  PlayerLocalOutboxRefused
+} derive(Eq, @debug.Debug)
+
+pub(all) enum PlayerLocalSealCommitResult {
+  PlayerLocalSealCommitted
+  PlayerLocalSealConcurrentWrite
+} derive(Eq, @debug.Debug)
+
+pub struct PlayerLocalSealPlan {
+  runtime_plan : AtomicCheckpointSealPlan
+  expected_revision : Int
+  required_destinations : Array[String]
+  consumed_closure : EpochClosureEvidence
+} derive(Eq, @debug.Debug)
+pub fn PlayerLocalSealPlan::write_set(Self) -> PlayerLocalSealWriteSet
+
+pub(all) enum PlayerLocalSealPrepareResult {
+  PlayerLocalSealPrepared(PlayerLocalSealPlan)
+  PlayerLocalSealAlreadyCommitted
+  PlayerLocalSealConflict(CheckpointSealConflictReason)
+  PlayerLocalSealRefused(CheckpointSealRefusal)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PlayerLocalSealWriteSet {
+  expected_revision : Int
+  expected_snapshot : CheckpointSealStorageSnapshot
+  checkpoint : CheckpointSealDraft
+  next_head : CheckpointSealHead
+  outbox_entries : Array[PlayerLocalCheckpointOutboxRecord]
+  consumed_closure : EpochClosureEvidence
+  next_outbox_entry_count : Int
+  next_created_order : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum RetrySelectionRefusal {
+  NegativeSelectionTime
+  InvalidSelectionBoundary
+  EmptySelectionDestination
+} derive(Eq, @debug.Debug)
+
+pub(all) enum RetrySelectionResult {
+  RetrySelected(Int)
+  NoRetryableCheckpoint
+  RetrySelectionRefused(RetrySelectionRefusal)
+} derive(Eq, @debug.Debug)
+
+pub struct TrustedEpochClosure {
+  evidence_value : EpochClosureEvidence
+} derive(Eq, @debug.Debug)
+pub fn TrustedEpochClosure::epoch(Self) -> Int
+pub fn TrustedEpochClosure::evidence(Self) -> EpochClosureEvidence
+
+// Type aliases
+
+// Traits
+

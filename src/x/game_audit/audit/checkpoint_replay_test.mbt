@@ -1,0 +1,31 @@
+///|
+test "checkpoint replay evidence requires a capability for the exact digest" {
+  assert_true(
+    checkpoint_replay_capability_matches(
+      capability_present=true,
+      checkpoint_digest_matches=true,
+      authority_key_matches=true,
+    ),
+  )
+  assert_false(
+    checkpoint_replay_capability_matches(
+      capability_present=false,
+      checkpoint_digest_matches=true,
+      authority_key_matches=true,
+    ),
+  )
+  assert_false(
+    checkpoint_replay_capability_matches(
+      capability_present=true,
+      checkpoint_digest_matches=false,
+      authority_key_matches=true,
+    ),
+  )
+  assert_false(
+    checkpoint_replay_capability_matches(
+      capability_present=true,
+      checkpoint_digest_matches=true,
+      authority_key_matches=false,
+    ),
+  )
+}

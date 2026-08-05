@@ -1,0 +1,71 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/x/game_audit/market"
+
+import {
+  "mizchi/converge/audit/merkle",
+  "mizchi/converge/bft",
+  "mizchi/converge/x/game_audit/attestation",
+  "mizchi/converge/x/game_audit/replay",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn build_receipt_batch(&@bft.Hasher, Array[ItemReceipt]) -> ReceiptBatchBuildResult
+
+pub fn market_accepts_listing(&@bft.Hasher, @attestation.FinalizedCheckpoint, ItemReceiptProof, replayed~ : @replay.ReplayedAssetEffect, seller_id~ : String, rejected_ancestor~ : Bool) -> Bool
+
+pub fn serialize_item_receipt(ItemReceipt) -> String
+
+pub fn validate_item_receipt(ItemReceipt) -> ItemReceiptValidation
+
+// Errors
+
+// Types and methods
+pub(all) struct ItemReceipt {
+  asset_id : String
+  recipient_id : String
+  item_type : String
+  quantity : Int
+  source_event : @bft.Digest
+  output_index : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) struct ItemReceiptProof {
+  receipt : ItemReceipt
+  merkle_proof : @merkle.MerkleProof
+} derive(Eq, @debug.Debug)
+
+pub(all) enum ItemReceiptValidation {
+  ReceiptValid
+  MissingAssetId
+  MissingRecipientId
+  MissingItemType
+  InvalidQuantity
+  InvalidOutputIndex
+} derive(Eq, @debug.Debug)
+
+pub struct ReceiptBatch {
+  receipts : Array[ItemReceipt]
+  asset_indices : Map[String, Int]
+  tree : @merkle.MerkleTree
+}
+pub fn ReceiptBatch::length(Self) -> Int
+pub fn ReceiptBatch::proof_for(Self, String) -> ItemReceiptProof?
+pub fn ReceiptBatch::receipts(Self) -> Array[ItemReceipt]
+pub fn ReceiptBatch::root(Self) -> @bft.Digest
+
+pub(all) enum ReceiptBatchBuildResult {
+  Built(ReceiptBatch)
+  BatchRejected(ReceiptBatchError)
+}
+
+pub(all) enum ReceiptBatchError {
+  InvalidReceipt(Int, ItemReceiptValidation)
+  DuplicateAssetId(String)
+  DuplicateSourceOutput(Int)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

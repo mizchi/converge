@@ -1,0 +1,60 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/x/game_audit/worker"
+
+// Values
+pub fn audit_acknowledge_checkpoint_outbox(Int, String, String, String, String, String, Int, String, String, Int, Int, String, String, String, String, String, Int, String, String, Bool) -> String
+
+pub fn audit_benchmark_make_anchor_envelope(String, String, String, Int, String) -> String
+
+pub fn audit_benchmark_make_checkpoint_delivery_authentication(String, String, Array[String], Array[String], Int, Int, Int, String, String, String, String, String, Int, String, String, String) -> String
+
+pub fn audit_benchmark_make_inventory_listing_proof_bundle(String, String, String, String, Int, String, String, String, String, Int, String, Int, Int) -> String
+
+pub fn audit_benchmark_make_open_world_pve_replay_bundle(String, String, String, String) -> String
+
+pub fn audit_benchmark_make_pve_replay_bundle(String, String, String) -> String
+
+pub fn audit_benchmark_make_pvp_replay_bundle(String, String, String) -> String
+
+pub fn audit_classify_anchor_head(Bool, Bool, Bool, Int, Int, Bool) -> String
+
+pub fn audit_classify_central_replay(Bool, Bool, Bool, Bool, Bool) -> String
+
+pub fn audit_experimental_sign_checkpoint_delivery_approval(String, String, String) -> String
+
+pub fn audit_inventory_head_advance_allowed(Bool, Bool, Bool, Bool, Bool, Bool) -> Bool
+
+pub fn audit_marketplace_creation_persist_allowed(Bool, Bool, Bool, Bool, Bool) -> Bool
+
+pub fn audit_open_checkpoint_closure(Int, String, String, String, String, Int, String, String, String, Bool, Bool, Bool) -> String
+
+pub fn audit_prepare_atomic_checkpoint_seal(Int, String, String, String, String, Int, String, String, String, Int, String, Bool, Bool, Bool, Bool, Int, Int, Int, Int, String, String, String, Array[String]) -> String
+
+pub fn audit_record_peer_delivery_failure(String, Bool, Bool, Int, Int, Int, Int, Int, Int, Int) -> String
+
+pub fn audit_record_peer_delivery_success(String, Bool, Bool, Int, Int, Int, Int) -> String
+
+pub fn audit_select_peer_checkpoint_response(Array[String], Array[String], Array[Bool], Array[Int], String) -> String
+
+pub fn audit_select_peer_delivery_batch(Array[String], Array[Bool], Array[Bool], Array[Int], Array[Int], Array[Int], Int, Int, Int, Int) -> String
+
+pub fn audit_verify_anchor_envelope(String, String, String) -> String
+
+pub fn audit_verify_checkpoint_delivery_authentication(Int, String, String, String, String, String, Int, String, String, String, String, String, Array[String], Array[String], Int, String, String, String, String, Array[String], Array[String], Array[String], Array[String], Array[String]) -> String
+
+pub fn audit_verify_inventory_listing_proof_bundle(String, String, String, String, String, String, String, String, Int, String, Int, String, Bool) -> String
+
+pub fn audit_verify_open_world_pve_replay_bundle(String, String, String, String, String, String, String, String, String, String) -> String
+
+pub fn audit_verify_pve_replay_bundle(String, String, String, String) -> String
+
+pub fn audit_verify_pvp_replay_bundle(String, String, String, String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

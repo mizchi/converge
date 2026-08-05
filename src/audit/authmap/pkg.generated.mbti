@@ -1,0 +1,67 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/audit/authmap"
+
+import {
+  "mizchi/converge/bft",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn verify_membership(&@bft.Hasher, @bft.Digest, AuthMapProof) -> Bool
+
+pub fn verify_non_membership(&@bft.Hasher, @bft.Digest, AuthMapAbsenceProof) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct AuthMapAbsenceProof {
+  key : String
+  entry_count : Int
+  path : Array[AuthMapStep]
+} derive(Eq, @debug.Debug)
+
+pub(all) enum AuthMapMutation {
+  Inserted
+  Updated
+  Unchanged
+} derive(Eq, @debug.Debug)
+
+pub(all) struct AuthMapProof {
+  key : String
+  value : String
+  left_digest : @bft.Digest
+  right_digest : @bft.Digest
+  entry_count : Int
+  path : Array[AuthMapStep]
+} derive(Eq, @debug.Debug)
+
+pub(all) enum AuthMapStep {
+  DescendedLeft(String, String, @bft.Digest)
+  DescendedRight(String, String, @bft.Digest)
+} derive(Eq, @debug.Debug)
+
+pub enum AuthNode {
+  Empty
+  Branch(String, String, @bft.Digest, @bft.Digest, AuthNode, AuthNode)
+}
+
+pub struct AuthenticatedMap {
+  hasher : &@bft.Hasher
+  empty_digest : @bft.Digest
+  mut root_node : AuthNode
+  mut entry_count : Int
+}
+pub fn AuthenticatedMap::absence_proof(Self, String) -> AuthMapAbsenceProof?
+pub fn AuthenticatedMap::fork(Self) -> Self
+pub fn AuthenticatedMap::get(Self, String) -> String?
+pub fn AuthenticatedMap::new(&@bft.Hasher) -> Self
+pub fn AuthenticatedMap::proof(Self, String) -> AuthMapProof?
+pub fn AuthenticatedMap::put(Self, String, String) -> AuthMapMutation
+pub fn AuthenticatedMap::remove(Self, String) -> Bool
+pub fn AuthenticatedMap::root(Self) -> @bft.Digest
+pub fn AuthenticatedMap::size(Self) -> Int
+
+// Type aliases
+
+// Traits
+

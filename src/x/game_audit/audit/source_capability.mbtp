@@ -1,0 +1,55 @@
+///|
+predicate source_capability_matches_post(
+  session_matches : Bool,
+  digest_matches : Bool,
+  result : Bool,
+) {
+  if session_matches {
+    result == digest_matches
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma accepted_source_requires_exact_binding(
+  session_matches : Bool,
+  digest_matches : Bool,
+) where {
+  proof_require: source_capability_matches_post(
+    session_matches,
+    digest_matches,
+    true,
+  ),
+  proof_ensure: session_matches == true,
+  proof_ensure: digest_matches == true,
+} {
+}
+
+///|
+pub lemma session_mismatch_rejects_source(
+  digest_matches : Bool,
+  outcome : Bool,
+) where {
+  proof_require: source_capability_matches_post(
+    false,
+    digest_matches,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}
+
+///|
+pub lemma digest_mismatch_rejects_source(
+  session_matches : Bool,
+  outcome : Bool,
+) where {
+  proof_require: source_capability_matches_post(
+    session_matches,
+    false,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}

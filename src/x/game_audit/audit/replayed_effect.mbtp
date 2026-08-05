@@ -1,0 +1,151 @@
+///|
+predicate replayed_effect_allowed_post(
+  source_authenticated : Bool,
+  session_matches : Bool,
+  effect_valid : Bool,
+  manifest_present : Bool,
+  kernel_accepted : Bool,
+  authorization : Bool,
+) {
+  if source_authenticated {
+    if session_matches {
+      if effect_valid {
+        if manifest_present {
+          authorization == kernel_accepted
+        } else {
+          authorization == false
+        }
+      } else {
+        authorization == false
+      }
+    } else {
+      authorization == false
+    }
+  } else {
+    authorization == false
+  }
+}
+
+///|
+pub lemma replayed_effect_requires_every_condition(
+  source_authenticated : Bool,
+  session_matches : Bool,
+  effect_valid : Bool,
+  manifest_present : Bool,
+  kernel_accepted : Bool,
+) where {
+  proof_require: replayed_effect_allowed_post(
+    source_authenticated,
+    session_matches,
+    effect_valid,
+    manifest_present,
+    kernel_accepted,
+    true,
+  ),
+  proof_ensure: source_authenticated == true,
+  proof_ensure: session_matches == true,
+  proof_ensure: effect_valid == true,
+  proof_ensure: manifest_present == true,
+  proof_ensure: kernel_accepted == true,
+} {
+}
+
+///|
+pub lemma unauthenticated_source_rejects_replayed_effect(
+  session_matches : Bool,
+  effect_valid : Bool,
+  manifest_present : Bool,
+  kernel_accepted : Bool,
+  authorization : Bool,
+) where {
+  proof_require: replayed_effect_allowed_post(
+    false,
+    session_matches,
+    effect_valid,
+    manifest_present,
+    kernel_accepted,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma wrong_session_rejects_replayed_effect(
+  source_authenticated : Bool,
+  effect_valid : Bool,
+  manifest_present : Bool,
+  kernel_accepted : Bool,
+  authorization : Bool,
+) where {
+  proof_require: replayed_effect_allowed_post(
+    source_authenticated,
+    false,
+    effect_valid,
+    manifest_present,
+    kernel_accepted,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma invalid_effect_rejects_replay(
+  source_authenticated : Bool,
+  session_matches : Bool,
+  manifest_present : Bool,
+  kernel_accepted : Bool,
+  authorization : Bool,
+) where {
+  proof_require: replayed_effect_allowed_post(
+    source_authenticated,
+    session_matches,
+    false,
+    manifest_present,
+    kernel_accepted,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma missing_manifest_rejects_replayed_effect(
+  source_authenticated : Bool,
+  session_matches : Bool,
+  effect_valid : Bool,
+  kernel_accepted : Bool,
+  authorization : Bool,
+) where {
+  proof_require: replayed_effect_allowed_post(
+    source_authenticated,
+    session_matches,
+    effect_valid,
+    false,
+    kernel_accepted,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}
+
+///|
+pub lemma kernel_rejection_rejects_replayed_effect(
+  source_authenticated : Bool,
+  session_matches : Bool,
+  effect_valid : Bool,
+  manifest_present : Bool,
+  authorization : Bool,
+) where {
+  proof_require: replayed_effect_allowed_post(
+    source_authenticated,
+    session_matches,
+    effect_valid,
+    manifest_present,
+    false,
+    authorization,
+  ),
+  proof_ensure: authorization == false,
+} {
+}

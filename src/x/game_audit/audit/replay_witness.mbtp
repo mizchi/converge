@@ -1,0 +1,151 @@
+///|
+predicate replay_witness_policy_holds(
+  witness_count : Int,
+  max_faults : Int,
+) {
+  max_faults >= 0 && witness_count > 3 * max_faults
+}
+
+///|
+predicate replay_witness_policy_is_invalid(
+  witness_count : Int,
+  max_faults : Int,
+) {
+  if max_faults >= 0 {
+    witness_count <= 3 * max_faults
+  } else {
+    true
+  }
+}
+
+///|
+predicate replay_witness_policy_valid_post(
+  witness_count : Int,
+  max_faults : Int,
+  result : Bool,
+) {
+  if max_faults >= 0 {
+    result == (witness_count > 3 * max_faults)
+  } else {
+    result == false
+  }
+}
+
+///|
+predicate replay_witness_quorum_size_post(
+  witness_count : Int,
+  max_faults : Int,
+  result : Int,
+) {
+  result == witness_count - max_faults
+}
+
+///|
+predicate replay_witness_certificate_allowed_post(
+  witness_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+  result : Bool,
+) {
+  if replay_witness_policy_holds(witness_count, max_faults) {
+    if approval_count >= witness_count - max_faults {
+      result == (approval_count <= witness_count)
+    } else {
+      result == false
+    }
+  } else {
+    result == false
+  }
+}
+
+///|
+pub lemma accepted_replay_witness_certificate_has_valid_policy(
+  witness_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+) where {
+  proof_require: replay_witness_certificate_allowed_post(
+    witness_count,
+    max_faults,
+    approval_count,
+    true,
+  ),
+  proof_ensure: replay_witness_policy_holds(witness_count, max_faults),
+} {
+}
+
+///|
+pub lemma accepted_replay_witness_certificate_has_quorum(
+  witness_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+) where {
+  proof_require: replay_witness_certificate_allowed_post(
+    witness_count,
+    max_faults,
+    approval_count,
+    true,
+  ),
+  proof_ensure: approval_count >= witness_count - max_faults,
+  proof_ensure: approval_count <= witness_count,
+} {
+}
+
+///|
+/// If no more than `f` witnesses are Byzantine, every accepted quorum contains
+/// at least one honest signer because its size is strictly greater than `f`.
+pub lemma replay_witness_quorum_exceeds_fault_bound(
+  witness_count : Int,
+  max_faults : Int,
+) where {
+  proof_require: replay_witness_policy_holds(witness_count, max_faults),
+  proof_ensure: witness_count - max_faults > max_faults,
+} {
+}
+
+///|
+/// Any two `n - f` quorums intersect in more than `f` roster positions.
+pub lemma replay_witness_quorums_intersect_beyond_fault_bound(
+  witness_count : Int,
+  max_faults : Int,
+) where {
+  proof_require: replay_witness_policy_holds(witness_count, max_faults),
+  proof_ensure: 2 * (witness_count - max_faults) - witness_count > max_faults,
+} {
+}
+
+///|
+pub lemma replay_witness_under_quorum_fails_closed(
+  witness_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+  outcome : Bool,
+) where {
+  proof_require: approval_count < witness_count - max_faults,
+  proof_require: replay_witness_certificate_allowed_post(
+    witness_count,
+    max_faults,
+    approval_count,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}
+
+///|
+pub lemma invalid_replay_witness_policy_fails_closed(
+  witness_count : Int,
+  max_faults : Int,
+  approval_count : Int,
+  outcome : Bool,
+) where {
+  proof_require: replay_witness_policy_is_invalid(witness_count, max_faults),
+  proof_require: replay_witness_certificate_allowed_post(
+    witness_count,
+    max_faults,
+    approval_count,
+    outcome,
+  ),
+  proof_ensure: outcome == false,
+} {
+}

@@ -1,0 +1,241 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/x/game_audit/wire"
+
+import {
+  "mizchi/converge/audit/merkle",
+  "mizchi/converge/bft",
+  "mizchi/converge/x/game_audit/attestation",
+  "mizchi/converge/x/game_audit/checkpoint",
+  "mizchi/converge/x/game_audit/inventory",
+  "mizchi/converge/x/game_audit/open_world",
+  "mizchi/converge/x/game_audit/replay",
+  "mizchi/converge/x/game_audit/witness_manifest",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn decode_inventory_listing_proof_bundle(Bytes, limits~ : InventoryListingWireLimits) -> Result[InventoryListingProofBundle, InventoryListingWireError]
+
+pub fn decode_open_world_observer_signing_anchor_envelope(Bytes, limits~ : OpenWorldAuditWireLimits) -> Result[@open_world.OpenWorldObserverSigningAnchorEnvelope, OpenWorldAuditWireError]
+
+pub fn decode_open_world_observer_signing_anchor_gap_request(Bytes, limits~ : OpenWorldAuditWireLimits) -> Result[@open_world.OpenWorldObserverSigningAnchorGapRequest, OpenWorldAuditWireError]
+
+pub fn decode_open_world_observer_signing_anchor_gap_response(Bytes, limits~ : OpenWorldAuditWireLimits) -> Result[@open_world.OpenWorldObserverSigningAnchorGapResponse, OpenWorldAuditWireError]
+
+pub fn decode_open_world_pve_replay_bundle(Bytes, limits~ : OpenWorldPveReplayWireLimits) -> Result[OpenWorldPveReplayBundle, OpenWorldPveReplayWireError]
+
+pub fn decode_pve_replay_bundle(Bytes, limits~ : PveReplayWireLimits) -> Result[PveReplayBundle, PveReplayWireError]
+
+pub fn decode_pvp_replay_bundle(Bytes, limits~ : PvpReplayWireLimits) -> Result[PvpReplayBundle, PvpReplayWireError]
+
+pub fn encode_inventory_listing_proof_bundle(InventoryListingProofBundle) -> Bytes
+
+pub fn encode_open_world_observer_signing_anchor_envelope(@open_world.OpenWorldObserverSigningAnchorEnvelope) -> Bytes
+
+pub fn encode_open_world_observer_signing_anchor_gap_request(@open_world.OpenWorldObserverSigningAnchorGapRequest) -> Bytes
+
+pub fn encode_open_world_observer_signing_anchor_gap_response(@open_world.OpenWorldObserverSigningAnchorGapResponse) -> Bytes
+
+pub fn encode_open_world_pve_replay_bundle(OpenWorldPveReplayBundle) -> Bytes
+
+pub fn encode_pve_replay_bundle(PveReplayBundle) -> Bytes
+
+pub fn encode_pvp_replay_bundle(PvpReplayBundle) -> Bytes
+
+// Errors
+pub suberror OpenWorldAuditWireError {
+  WireInputTooLarge(Int, Int)
+  WireTextTooLarge(Int, Int)
+  WireProofTooLong(Int, Int)
+  WireGapItemsTooMany(Int, Int)
+  WireUnsupportedVersion(Int)
+  WireNonCanonicalEncoding
+  WireMalformedCbor
+  WireInvalidShape
+  WireIntegerOutOfRange
+} derive(Eq, @debug.Debug)
+
+pub suberror OpenWorldPveReplayWireError {
+  OpenWorldReplayInputTooLarge(Int, Int)
+  OpenWorldReplayObserversTooMany(Int, Int)
+  OpenWorldReplayObservationsTooMany(Int, Int)
+  OpenWorldReplayProofTooLong(Int, Int)
+  OpenWorldReplayTransparencyCodecRefused(OpenWorldAuditWireError)
+  OpenWorldReplayUnsupportedVersion(Int)
+  OpenWorldReplayNonCanonicalEncoding
+  OpenWorldReplayMalformedCbor
+  OpenWorldReplayPveCodecRefused(PveReplayWireError)
+} derive(Eq, @debug.Debug)
+
+pub suberror PveReplayWireError {
+  PveWireInputTooLarge(Int, Int)
+  PveWireTextTooLarge(Int, Int)
+  PveWirePlayersTooMany(Int, Int)
+  PveWireAttacksTooMany(Int, Int)
+  PveWireTranscriptsTooMany(Int, Int)
+  PveWireDodgeEvidenceTooMany(Int, Int)
+  PveWireAssetEffectsTooMany(Int, Int)
+  PveWireDependenciesTooMany(Int, Int)
+  PveWireValuesTooMany(Int, Int)
+  PveWireUnsupportedVersion(Int)
+  PveWireNonCanonicalEncoding
+  PveWireMalformedCbor
+  PveWireInvalidShape
+  PveWireIntegerOutOfRange
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub(all) struct InventoryListingProofBundle {
+  signed_checkpoint : @checkpoint.SignedCheckpoint
+  game_manifest_digest : @bft.Digest
+  witnesses : Array[@witness_manifest.ReplayWitnessIdentity]
+  max_faults : Int
+  attestations : Array[@attestation.SignedAttestation]
+  proof : @inventory.InventoryProof
+} derive(Eq, @debug.Debug)
+
+pub(all) enum InventoryListingWireError {
+  InventoryWireInputTooLarge(Int, Int)
+  InventoryWireWitnessesTooMany(Int, Int)
+  InventoryWireAttestationsTooMany(Int, Int)
+  InventoryWireUnsupportedVersion(Int)
+  InventoryWireNonCanonicalEncoding
+  InventoryWireMalformedCbor
+  InventoryWireCodecRefused(OpenWorldAuditWireError)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct InventoryListingWireLimits {
+  max_bundle_bytes : Int
+  max_text_bytes : Int
+  max_witnesses : Int
+  max_attestations : Int
+  max_proof_steps : Int
+} derive(Eq, @debug.Debug)
+pub fn InventoryListingWireLimits::default() -> Self
+
+pub(all) struct OpenWorldAuditWireLimits {
+  max_envelope_bytes : Int
+  max_gap_request_bytes : Int
+  max_gap_response_bytes : Int
+  max_text_bytes : Int
+  max_proof_steps : Int
+  max_gap_response_items : Int
+} derive(Eq, @debug.Debug)
+pub fn OpenWorldAuditWireLimits::default() -> Self
+
+pub(all) struct OpenWorldPveReplayBundle {
+  signed_audit_checkpoint : @checkpoint.SignedCheckpoint
+  signed_anchor_seal_checkpoint : @checkpoint.SignedCheckpoint
+  audit_transparency : @open_world.OpenWorldAuditTransparencyEnvelope
+  game_manifest_digest : @bft.Digest
+  sample_numerator : Int
+  sample_denominator : Int
+  registered_count : Int
+  seed : String
+  observers : Array[@attestation.Participant]
+  max_faults : Int
+  observations : Array[@open_world.SignedOpenWorldRegistrationObservation]
+  eligibility_proof : @merkle.MerkleProof
+  encounter : PveReplayBundle
+}
+
+pub(all) struct OpenWorldPveReplayWireLimits {
+  max_bundle_bytes : Int
+  max_observers : Int
+  max_observations : Int
+  max_merkle_steps : Int
+  max_transparency_proof_steps : Int
+  pve : PveReplayWireLimits
+} derive(Eq, @debug.Debug)
+pub fn OpenWorldPveReplayWireLimits::default() -> Self
+
+pub(all) struct PveReplayAssetEffectEvidence {
+  source : @bft.SignedEvent
+  effect : @replay.AssetEffect
+}
+
+pub(all) struct PveReplayAttackTranscript {
+  attack_id : String
+  telegraph : @bft.SignedEvent
+  dodge_evidence : Array[PveReplayDodgeEvidence]
+}
+
+pub(all) struct PveReplayBundle {
+  authority_peer_id : String
+  signed_checkpoint : @checkpoint.SignedCheckpoint
+  config : @replay.DungeonEncounterConfig
+  players : Array[@replay.DungeonPlayer]
+  attacks : Array[@replay.DungeonEncounterAttack]
+  transcripts : Array[PveReplayAttackTranscript]
+  asset_effects : Array[PveReplayAssetEffectEvidence]
+}
+
+pub(all) struct PveReplayDodgeEvidence {
+  input : @bft.SignedEvent
+  receipt : @bft.SignedEvent
+  intent : @replay.DodgeIntent
+  observed : @replay.DodgeReceipt
+}
+
+pub(all) struct PveReplayWireLimits {
+  max_bundle_bytes : Int
+  max_text_bytes : Int
+  max_players : Int
+  max_attacks : Int
+  max_transcripts : Int
+  max_total_dodge_evidence : Int
+  max_asset_effects : Int
+  max_dependencies_per_event : Int
+  max_values_per_operation : Int
+} derive(Eq, @debug.Debug)
+pub fn PveReplayWireLimits::default() -> Self
+
+pub(all) struct PvpReplayBundle {
+  referee_peer_id : String
+  signed_checkpoint : @checkpoint.SignedCheckpoint
+  config : @replay.PvpEpochConfig
+  teams : Array[@replay.PvpTeam]
+  players : Array[@replay.PvpPlayer]
+  witnesses : Array[@witness_manifest.ReplayWitnessIdentity]
+  max_faults : Int
+  commands : Array[PvpReplayCommandEvidence]
+  attestations : Array[@attestation.SignedAttestation]
+}
+
+pub(all) struct PvpReplayCommandEvidence {
+  input : @bft.SignedEvent
+  receipt : @bft.SignedEvent
+  intent : @replay.PvpCommandIntent
+  observed : @replay.PvpCommandReceipt
+}
+
+pub(all) enum PvpReplayWireError {
+  PvpWireInputTooLarge(Int, Int)
+  PvpWireTeamsTooMany(Int, Int)
+  PvpWirePlayersTooMany(Int, Int)
+  PvpWireWitnessesTooMany(Int, Int)
+  PvpWireCommandsTooMany(Int, Int)
+  PvpWireAttestationsTooMany(Int, Int)
+  PvpWireUnsupportedVersion(Int)
+  PvpWireNonCanonicalEncoding
+  PvpWireMalformedCbor
+  PvpWireCodecRefused(PveReplayWireError)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct PvpReplayWireLimits {
+  max_bundle_bytes : Int
+  max_text_bytes : Int
+  max_teams : Int
+  max_players : Int
+  max_witnesses : Int
+  max_commands : Int
+  max_attestations : Int
+  max_dependencies_per_event : Int
+  max_values_per_operation : Int
+} derive(Eq, @debug.Debug)
+pub fn PvpReplayWireLimits::default() -> Self
+
+// Type aliases
+
+// Traits
+

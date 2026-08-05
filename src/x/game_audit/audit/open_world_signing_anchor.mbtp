@@ -1,0 +1,156 @@
+///|
+predicate open_world_signing_anchor_is_published(
+  decision : OpenWorldSigningAnchorPublicationDecision,
+) {
+  match decision {
+    PublishSigningAnchor => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_is_invalid(
+  decision : OpenWorldSigningAnchorPublicationDecision,
+) {
+  match decision {
+    RejectInvalidSigningAnchor => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_has_wrong_session(
+  decision : OpenWorldSigningAnchorPublicationDecision,
+) {
+  match decision {
+    RejectSigningAnchorLogSession => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_has_wrong_manifest(
+  decision : OpenWorldSigningAnchorPublicationDecision,
+) {
+  match decision {
+    RejectSigningAnchorLogManifest => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_has_invalid_proof(
+  decision : OpenWorldSigningAnchorPublicationDecision,
+) {
+  match decision {
+    RejectSigningAnchorMembership => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_publication_post(
+  anchor_valid : Bool,
+  log_session_matches : Bool,
+  log_manifest_matches : Bool,
+  membership_proof_valid : Bool,
+  decision : OpenWorldSigningAnchorPublicationDecision,
+) {
+  if !anchor_valid {
+    open_world_signing_anchor_is_invalid(decision)
+  } else {
+    if !log_session_matches {
+      open_world_signing_anchor_has_wrong_session(decision)
+    } else {
+      if !log_manifest_matches {
+        open_world_signing_anchor_has_wrong_manifest(decision)
+      } else {
+        if !membership_proof_valid {
+          open_world_signing_anchor_has_invalid_proof(decision)
+        } else {
+          open_world_signing_anchor_is_published(decision)
+        }
+      }
+    }
+  }
+}
+
+///|
+pub lemma published_signing_anchor_requires_every_trust_condition(
+  anchor_valid : Bool,
+  log_session_matches : Bool,
+  log_manifest_matches : Bool,
+  membership_proof_valid : Bool,
+  decision : OpenWorldSigningAnchorPublicationDecision,
+) where {
+  proof_require: open_world_signing_anchor_publication_post(
+    anchor_valid,
+    log_session_matches,
+    log_manifest_matches,
+    membership_proof_valid,
+    decision,
+  ),
+  proof_require: open_world_signing_anchor_is_published(decision),
+  proof_ensure: anchor_valid == true,
+  proof_ensure: log_session_matches == true,
+  proof_ensure: log_manifest_matches == true,
+  proof_ensure: membership_proof_valid == true,
+} {
+}
+
+///|
+pub lemma invalid_signing_anchor_is_not_published(
+  log_session_matches : Bool,
+  log_manifest_matches : Bool,
+  membership_proof_valid : Bool,
+) where {
+  proof_ensure: open_world_signing_anchor_publication_post(
+    false,
+    log_session_matches,
+    log_manifest_matches,
+    membership_proof_valid,
+    RejectInvalidSigningAnchor,
+  ),
+} {
+}
+
+///|
+pub lemma wrong_signing_anchor_log_session_is_not_published(
+  log_manifest_matches : Bool,
+  membership_proof_valid : Bool,
+) where {
+  proof_ensure: open_world_signing_anchor_publication_post(
+    true,
+    false,
+    log_manifest_matches,
+    membership_proof_valid,
+    RejectSigningAnchorLogSession,
+  ),
+} {
+}
+
+///|
+pub lemma wrong_signing_anchor_log_manifest_is_not_published(
+  membership_proof_valid : Bool,
+) where {
+  proof_ensure: open_world_signing_anchor_publication_post(
+    true,
+    true,
+    false,
+    membership_proof_valid,
+    RejectSigningAnchorLogManifest,
+  ),
+} {
+}
+
+///|
+pub lemma invalid_signing_anchor_membership_is_not_published() where {
+  proof_ensure: open_world_signing_anchor_publication_post(
+    true,
+    true,
+    true,
+    false,
+    RejectSigningAnchorMembership,
+  ),
+} {
+}

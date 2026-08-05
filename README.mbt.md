@@ -44,6 +44,8 @@ src/
 ├── doc/         CrdtDoc — high-level Durable Layer API
 ├── ephemeral/   EphemeralStore — LWW Register Map (Ephemeral Layer)
 ├── bft/         BFT-CRDT adapter (Byzantine fault detection)
+├── audit/       Game-neutral checkpoint policy, commitment, head, Merkle/AuthMap
+├── x/game_audit/ Experimental multiplayer audit application stack
 ├── sync/        Sync protocol (PushRequest, PullRequest, PullResponse)
 ├── topology/    Network topology simulations (Star, Gossip, Mesh, etc.)
 ├── wasm/        WASM/JS exports for both layers
@@ -107,6 +109,13 @@ Verification layer based on Kleppmann's "Making CRDTs Byzantine Fault Tolerant" 
 4. **Causal delivery** — Buffer events with missing dependencies; flush when deps arrive
 
 Crypto primitives are abstracted via `Hasher` / `Signer` / `Verifier` traits, allowing swappable implementations (FNV-1a + Mock for testing, SHA-256 + Ed25519 for production).
+
+Game-neutral checkpoint scheduling, commitment projection, authenticated
+delivery/quorum, runtime contracts, data structures, and head classification
+live in [`src/audit/`](src/audit/README.md).
+Opinionated replay/inventory rules and mode presets remain isolated under
+`src/x/game_audit/`; see [`docs/`](docs/README.md) for the research and contract
+ledger.
 
 ## Recommended Backend Adapters
 

@@ -1,0 +1,140 @@
+{
+  "benchmark": "checkpoint-witness-authority-settlement-v2",
+  "generated_at": "2026-08-05T02:42:12.835Z",
+  "base_url": "https://converge-game-audit.mizchi.workers.dev",
+  "worker_version_id": "9553b23b-4ea0-47c5-836d-321ab7ee6f9b",
+  "mode": "pvp",
+  "location_hint": "apac-ne",
+  "runs": 20,
+  "crypto": "experimental_sha256_ed25519_unaudited",
+  "source_bucketing": "server_secret_hmac_sha256",
+  "statistics": {
+    "percentile_method": "nearest_rank"
+  },
+  "load": {
+    "source_mode": "single-egress",
+    "approval_mode": "parallel",
+    "hostile_burst_size": 9,
+    "hostile_max_bursts": 3,
+    "hostile_source": "client-egress",
+    "valid_approvals_per_collection": 3,
+    "valid_source": "client-egress-after-retry-after",
+    "authority_ack_timeout_ms": 30000,
+    "authority_ack_poll_interval_ms": 100
+  },
+  "latency": {
+    "collection_start": {
+      "count": 20,
+      "mean_ms": 119.474,
+      "p50_ms": 114.128,
+      "p95_ms": 143.405,
+      "p99_ms": 167.692,
+      "max_ms": 167.692
+    },
+    "hostile_rejection": {
+      "count": 160,
+      "mean_ms": 541.803,
+      "p50_ms": 517.292,
+      "p95_ms": 771.148,
+      "p99_ms": 804.204,
+      "max_ms": 804.33
+    },
+    "hostile_limit": {
+      "count": 20,
+      "mean_ms": 543.062,
+      "p50_ms": 517.411,
+      "p95_ms": 771.84,
+      "p99_ms": 804.194,
+      "max_ms": 804.194
+    },
+    "approval_roundtrip": {
+      "count": 60,
+      "mean_ms": 418.477,
+      "p50_ms": 348.076,
+      "p95_ms": 749.357,
+      "p99_ms": 789.271,
+      "max_ms": 789.271
+    },
+    "quorum_wall": {
+      "count": 20,
+      "mean_ms": 422.505,
+      "p50_ms": 348.543,
+      "p95_ms": 749.671,
+      "p99_ms": 789.303,
+      "max_ms": 789.303
+    },
+    "clean_seal_path": {
+      "count": 20,
+      "mean_ms": 1241.528,
+      "p50_ms": 1063.771,
+      "p95_ms": 1884.616,
+      "p99_ms": 1893.033,
+      "max_ms": 1893.033
+    },
+    "clean_authority_path": {
+      "count": 20,
+      "mean_ms": 1271.142,
+      "p50_ms": 1097.452,
+      "p95_ms": 1912.035,
+      "p99_ms": 1920.432,
+      "max_ms": 1920.432
+    },
+    "server_collection": {
+      "count": 20,
+      "mean_ms": 1703.95,
+      "p50_ms": 1673,
+      "p95_ms": 1880,
+      "p99_ms": 1903,
+      "max_ms": 1903
+    },
+    "seal": {
+      "count": 20,
+      "mean_ms": 699.55,
+      "p50_ms": 624.64,
+      "p95_ms": 975.618,
+      "p99_ms": 1000.645,
+      "max_ms": 1000.645
+    },
+    "authority_ack": {
+      "count": 20,
+      "mean_ms": 729.163,
+      "p50_ms": 658.697,
+      "p95_ms": 1003.017,
+      "p99_ms": 1028.064,
+      "max_ms": 1028.064
+    },
+    "post_seal_ack_observation": {
+      "count": 20,
+      "mean_ms": 29.613,
+      "p50_ms": 29.505,
+      "p95_ms": 35.884,
+      "p99_ms": 40.834,
+      "max_ms": 40.834
+    }
+  },
+  "delivery": {
+    "acknowledged": 20,
+    "ack_decisions": {
+      "accepted": 20,
+      "duplicate": 0
+    },
+    "poll_attempts": {
+      "count": 20,
+      "mean_ms": 1,
+      "p50_ms": 1,
+      "p95_ms": 1,
+      "p99_ms": 1,
+      "max_ms": 1
+    }
+  },
+  "payload": {
+    "approval_request": {
+      "count": 60,
+      "mean_bytes": 680.5,
+      "p50_bytes": 679,
+      "p95_bytes": 682,
+      "p99_bytes": 682,
+      "max_bytes": 682
+    }
+  }
+}

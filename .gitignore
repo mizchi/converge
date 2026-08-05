@@ -2,6 +2,7 @@
 _build/
 target/
 target
+/states/
 .mooncakes/
 .moonagent/
 node_modules/

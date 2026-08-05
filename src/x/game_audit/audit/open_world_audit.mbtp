@@ -1,0 +1,229 @@
+///|
+fn open_world_outcome_is_economic(
+  outcome_class : OpenWorldOutcomeClass,
+) -> Bool {
+  match outcome_class {
+    Ephemeral => false
+    Durable => true
+    Tradable => true
+    HighValue => true
+  }
+}
+
+///|
+fn open_world_outcome_requires_central_replay(
+  outcome_class : OpenWorldOutcomeClass,
+) -> Bool {
+  match outcome_class {
+    HighValue => true
+    Ephemeral => false
+    Durable => false
+    Tradable => false
+  }
+}
+
+///|
+predicate open_world_decision_is_peer_accepted(
+  decision : OpenWorldAuditDecision,
+) {
+  match decision {
+    PeerAccepted => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_decision_is_central_accepted(
+  decision : OpenWorldAuditDecision,
+) {
+  match decision {
+    CentralAccepted => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_decision_is_provisional(
+  decision : OpenWorldAuditDecision,
+) {
+  match decision {
+    Provisional => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_decision_requires_central(
+  decision : OpenWorldAuditDecision,
+) {
+  match decision {
+    CentralReplayRequired => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_decision_is_rejected(
+  decision : OpenWorldAuditDecision,
+) {
+  match decision {
+    Rejected => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_audit_post(
+  outcome_class : OpenWorldOutcomeClass,
+  peer_certificate_matches : Bool,
+  challenge_present : Bool,
+  sample_selected : Bool,
+  central_replay_present : Bool,
+  central_replay_matches : Bool,
+  result : OpenWorldAuditDecision,
+) {
+  if central_replay_present {
+    if central_replay_matches {
+      open_world_decision_is_central_accepted(result)
+    } else {
+      open_world_decision_is_rejected(result)
+    }
+  } else {
+    if challenge_present ||
+      sample_selected ||
+      open_world_outcome_requires_central_replay(outcome_class) ||
+      (open_world_outcome_is_economic(outcome_class) &&
+      !peer_certificate_matches) {
+      open_world_decision_requires_central(result)
+    } else {
+      if peer_certificate_matches {
+        open_world_decision_is_peer_accepted(result)
+      } else {
+        open_world_decision_is_provisional(result)
+      }
+    }
+  }
+}
+
+///|
+pub lemma open_world_peer_acceptance_requires_matching_certificate(
+  outcome_class : OpenWorldOutcomeClass,
+  peer_certificate_matches : Bool,
+  challenge_present : Bool,
+  sample_selected : Bool,
+  central_replay_matches : Bool,
+) where {
+  proof_require: open_world_audit_post(
+    outcome_class,
+    peer_certificate_matches,
+    challenge_present,
+    sample_selected,
+    false,
+    central_replay_matches,
+    PeerAccepted,
+  ),
+  proof_ensure: peer_certificate_matches == true,
+  proof_ensure: challenge_present == false,
+  proof_ensure: sample_selected == false,
+  proof_ensure: open_world_outcome_requires_central_replay(outcome_class) ==
+    false,
+} {
+}
+
+///|
+pub lemma open_world_central_mismatch_is_rejected(
+  outcome_class : OpenWorldOutcomeClass,
+  peer_certificate_matches : Bool,
+  challenge_present : Bool,
+  sample_selected : Bool,
+) where {
+  proof_ensure: open_world_audit_post(
+    outcome_class,
+    peer_certificate_matches,
+    challenge_present,
+    sample_selected,
+    true,
+    false,
+    Rejected,
+  ),
+} {
+}
+
+///|
+pub lemma open_world_sampled_encounter_requires_central_replay(
+  outcome_class : OpenWorldOutcomeClass,
+  peer_certificate_matches : Bool,
+  central_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_audit_post(
+    outcome_class,
+    peer_certificate_matches,
+    false,
+    true,
+    false,
+    central_replay_matches,
+    CentralReplayRequired,
+  ),
+} {
+}
+
+///|
+pub lemma open_world_challenge_requires_central_replay(
+  outcome_class : OpenWorldOutcomeClass,
+  peer_certificate_matches : Bool,
+  sample_selected : Bool,
+  central_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_audit_post(
+    outcome_class,
+    peer_certificate_matches,
+    true,
+    sample_selected,
+    false,
+    central_replay_matches,
+    CentralReplayRequired,
+  ),
+} {
+}
+
+///|
+pub lemma open_world_unwitnessed_economic_result_is_not_provisional(
+  outcome_class : OpenWorldOutcomeClass,
+  challenge_present : Bool,
+  sample_selected : Bool,
+  central_replay_matches : Bool,
+  decision : OpenWorldAuditDecision,
+) where {
+  proof_require: open_world_outcome_is_economic(outcome_class) == true,
+  proof_require: open_world_audit_post(
+    outcome_class,
+    false,
+    challenge_present,
+    sample_selected,
+    false,
+    central_replay_matches,
+    decision,
+  ),
+  proof_ensure: open_world_decision_requires_central(decision),
+} {
+}
+
+///|
+pub lemma open_world_provisional_result_is_non_economic(
+  outcome_class : OpenWorldOutcomeClass,
+  challenge_present : Bool,
+  sample_selected : Bool,
+  central_replay_matches : Bool,
+) where {
+  proof_require: open_world_audit_post(
+    outcome_class,
+    false,
+    challenge_present,
+    sample_selected,
+    false,
+    central_replay_matches,
+    Provisional,
+  ),
+  proof_ensure: open_world_outcome_is_economic(outcome_class) == false,
+} {
+}

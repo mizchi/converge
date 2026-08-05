@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/audit/commitment"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn adapt_checkpoint(&CheckpointAdapter) -> CheckpointCommitment
+
+// Errors
+
+// Types and methods
+pub(all) struct AuditDigest(String) derive(Compare, Eq, Hash, @debug.Debug)
+
+pub(all) struct CheckpointCommitment {
+  scope_id : String
+  epoch : Int
+  previous_checkpoint : AuditDigest
+  manifest_digest : AuditDigest
+  event_root : AuditDigest
+  state_root : AuditDigest
+  effect_root : AuditDigest
+  sealed_state_commitment : AuditDigest?
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+pub(open) trait CheckpointAdapter {
+  fn checkpoint_commitment(Self) -> CheckpointCommitment
+}
+

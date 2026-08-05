@@ -1,0 +1,142 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/audit/layered"
+
+import {
+  "mizchi/converge/audit",
+  "mizchi/converge/audit/merkle",
+  "mizchi/converge/bft",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn serialize_macro_checkpoint(MacroCheckpoint) -> String
+
+pub fn serialize_micro_checkpoint(MicroCheckpoint) -> String
+
+pub fn verify_macro_checkpoint_event(&@bft.Hasher, MacroCheckpoint, String, LayeredEventProof) -> Bool
+
+pub fn verify_macro_checkpoint_micro(&@bft.Hasher, MacroCheckpoint, MicroCheckpoint, @merkle.MerkleProof) -> Bool
+
+pub fn verify_micro_checkpoint_event(&@bft.Hasher, MicroCheckpoint, String, @merkle.MerkleProof) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) enum AdvanceWatermarkError {
+  WatermarkBeforeOrigin
+  WatermarkMovedBackward
+  NegativeCheckpointWindowBudget
+  CheckpointWindowBudgetExceeded(Int, Int)
+} derive(Eq, @debug.Debug)
+
+pub enum AdvanceWatermarkResult {
+  WatermarkAdvanced(LayeredCheckpointEmission)
+  WatermarkRefused(AdvanceWatermarkError)
+}
+
+pub(all) enum AppendAuditEventResult {
+  AuditEventAppended
+  AuditEventDuplicate
+  AuditEventRefused(AuditEventAdmissionError)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum AuditEventAdmissionError {
+  EventBeforeOrigin
+  EventBehindWatermark
+  InvalidBuilderWatermark
+  EmptyCanonicalEvent
+  PendingEventLimitReached
+} derive(Eq, @debug.Debug)
+
+pub(all) enum LayeredBuilderOpenError {
+  EmptyScopeId
+  NonPositivePendingEventLimit
+} derive(Eq, @debug.Debug)
+
+pub enum LayeredBuilderOpenResult {
+  LayeredBuilderReady(LayeredCheckpointBuilder)
+  LayeredBuilderRefused(LayeredBuilderOpenError)
+}
+
+pub struct LayeredCheckpointBuilder {
+  hasher : &@bft.Hasher
+  policy : @audit.VerifiedCheckpointPolicy
+  scope_id : String
+  origin_ms : Int
+  max_pending_events : Int
+  mut watermark_ms : Int
+  mut macro_epoch : Int
+  mut micro_index : Int
+  mut window_start_ms : Int
+  mut previous_macro_digest : @bft.Digest
+  mut pending_events : Array[PendingAuditEvent]
+  pending_payloads : Map[String, Bool]
+  mut current_macro_micros : Array[SealedMicroCheckpoint]
+}
+pub fn LayeredCheckpointBuilder::advance_watermark(Self, Int, max_windows~ : Int) -> AdvanceWatermarkResult
+pub fn LayeredCheckpointBuilder::append_event(Self, Int, String) -> AppendAuditEventResult
+pub fn LayeredCheckpointBuilder::open(&@bft.Hasher, @audit.VerifiedCheckpointPolicy, scope_id~ : String, origin_ms~ : Int, previous_macro_digest~ : @bft.Digest, max_pending_events~ : Int) -> LayeredBuilderOpenResult
+pub fn LayeredCheckpointBuilder::pending_event_count(Self) -> Int
+pub fn LayeredCheckpointBuilder::watermark_ms(Self) -> Int
+
+pub struct LayeredCheckpointEmission {
+  micro_values : Array[SealedMicroCheckpoint]
+  macro_values : Array[SealedMacroCheckpoint]
+}
+pub fn LayeredCheckpointEmission::empty() -> Self
+pub fn LayeredCheckpointEmission::macro_checkpoints(Self) -> Array[SealedMacroCheckpoint]
+pub fn LayeredCheckpointEmission::micro_checkpoints(Self) -> Array[SealedMicroCheckpoint]
+
+pub(all) struct LayeredEventProof {
+  micro_checkpoint : MicroCheckpoint
+  event_proof : @merkle.MerkleProof
+  micro_proof : @merkle.MerkleProof
+} derive(Eq, @debug.Debug)
+
+pub(all) struct MacroCheckpoint {
+  scope_id : String
+  epoch : Int
+  starts_at_ms : Int
+  ends_at_ms : Int
+  micro_checkpoint_count : Int
+  event_count : Int
+  previous_macro_digest : @bft.Digest
+  micro_root : @bft.Digest
+  digest : @bft.Digest
+} derive(Eq, @debug.Debug)
+
+pub(all) struct MicroCheckpoint {
+  scope_id : String
+  macro_epoch : Int
+  micro_index : Int
+  starts_at_ms : Int
+  ends_at_ms : Int
+  event_count : Int
+  event_root : @bft.Digest
+  digest : @bft.Digest
+} derive(Eq, @debug.Debug)
+
+type PendingAuditEvent
+
+pub struct SealedMacroCheckpoint {
+  checkpoint_value : MacroCheckpoint
+  micro_values : Array[SealedMicroCheckpoint]
+  tree : @merkle.MerkleTree
+}
+pub fn SealedMacroCheckpoint::checkpoint(Self) -> MacroCheckpoint
+pub fn SealedMacroCheckpoint::event_proof(Self, String) -> LayeredEventProof?
+pub fn SealedMacroCheckpoint::micro_checkpoint(Self, Int) -> MicroCheckpoint?
+pub fn SealedMacroCheckpoint::micro_proof(Self, Int) -> @merkle.MerkleProof?
+
+pub struct SealedMicroCheckpoint {
+  checkpoint_value : MicroCheckpoint
+  canonical_payloads : Array[String]
+  tree : @merkle.MerkleTree
+}
+pub fn SealedMicroCheckpoint::checkpoint(Self) -> MicroCheckpoint
+pub fn SealedMicroCheckpoint::event_proof(Self, String) -> @merkle.MerkleProof?
+
+// Type aliases
+
+// Traits
+

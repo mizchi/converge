@@ -1,0 +1,145 @@
+///|
+/// Logical encoding of whether an approval signature has been observed.
+fn participant_vote_saw_approval(vote : ParticipantVote) -> Bool {
+  match vote {
+    ApproveVote => true
+    EquivocatedVote => true
+    _ => false
+  }
+}
+
+///|
+/// Logical encoding of whether a challenge signature has been observed.
+fn participant_vote_saw_challenge(vote : ParticipantVote) -> Bool {
+  match vote {
+    ChallengeVote => true
+    EquivocatedVote => true
+    _ => false
+  }
+}
+
+///|
+predicate participant_votes_equivalent(
+  left : ParticipantVote,
+  right : ParticipantVote,
+) {
+  (participant_vote_saw_approval(left) ==
+  participant_vote_saw_approval(right)) &&
+  (participant_vote_saw_challenge(left) ==
+  participant_vote_saw_challenge(right))
+}
+
+///|
+predicate bool_or_model(left : Bool, right : Bool, result : Bool) {
+  if left {
+    result == true
+  } else {
+    if right { result == true } else { result == false }
+  }
+}
+
+///|
+/// The executable merge is set union over the two observed-signature bits.
+predicate merge_participant_votes_post(
+  left : ParticipantVote,
+  right : ParticipantVote,
+  result : ParticipantVote,
+) {
+  bool_or_model(
+    participant_vote_saw_approval(left),
+    participant_vote_saw_approval(right),
+    participant_vote_saw_approval(result),
+  ) && bool_or_model(
+    participant_vote_saw_challenge(left),
+    participant_vote_saw_challenge(right),
+    participant_vote_saw_challenge(result),
+  )
+}
+
+///|
+predicate participant_vote_is_approval_post(
+  vote : ParticipantVote,
+  result : Bool,
+) {
+  result == match vote {
+    ApproveVote => true
+    _ => false
+  }
+}
+
+///|
+predicate participant_vote_is_challenge_post(
+  vote : ParticipantVote,
+  result : Bool,
+) {
+  result == participant_vote_saw_challenge(vote)
+}
+
+///|
+pub lemma participant_vote_merge_is_idempotent(
+  vote : ParticipantVote,
+  merged_vote : ParticipantVote,
+) where {
+  proof_require: merge_participant_votes_post(vote, vote, merged_vote),
+  proof_ensure: participant_votes_equivalent(merged_vote, vote),
+} {
+}
+
+///|
+pub lemma participant_vote_merge_is_commutative(
+  left : ParticipantVote,
+  right : ParticipantVote,
+  left_right : ParticipantVote,
+  right_left : ParticipantVote,
+) where {
+  proof_require: merge_participant_votes_post(left, right, left_right),
+  proof_require: merge_participant_votes_post(right, left, right_left),
+  proof_ensure: participant_votes_equivalent(left_right, right_left),
+} {
+}
+
+///|
+pub lemma participant_vote_merge_is_associative(
+  first : ParticipantVote,
+  second : ParticipantVote,
+  third : ParticipantVote,
+  first_second : ParticipantVote,
+  left_result : ParticipantVote,
+  second_third : ParticipantVote,
+  right_result : ParticipantVote,
+) where {
+  proof_require: merge_participant_votes_post(first, second, first_second),
+  proof_require: merge_participant_votes_post(first_second, third, left_result),
+  proof_require: merge_participant_votes_post(second, third, second_third),
+  proof_require: merge_participant_votes_post(first, second_third, right_result),
+  proof_ensure: participant_votes_equivalent(left_result, right_result),
+} {
+}
+
+///|
+pub lemma challenge_never_merges_to_approval(
+  other : ParticipantVote,
+  merged_vote : ParticipantVote,
+) where {
+  proof_require: merge_participant_votes_post(
+    ChallengeVote,
+    other,
+    merged_vote,
+  ),
+  proof_ensure: participant_vote_saw_challenge(merged_vote) == true,
+} {
+}
+
+///|
+pub lemma equivocation_is_absorbing(
+  other : ParticipantVote,
+  merged_vote : ParticipantVote,
+) where {
+  proof_require: merge_participant_votes_post(
+    EquivocatedVote,
+    other,
+    merged_vote,
+  ),
+  proof_ensure: participant_votes_equivalent(merged_vote, EquivocatedVote),
+} {
+}

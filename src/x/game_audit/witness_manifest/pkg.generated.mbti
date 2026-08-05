@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/x/game_audit/witness_manifest"
+
+import {
+  "mizchi/converge/bft",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn replay_witness_session_manifest(&@bft.Hasher, game_manifest_digest~ : @bft.Digest, referee_key~ : @bft.PublicKey, witnesses~ : Array[ReplayWitnessIdentity], max_faults~ : Int) -> @bft.Digest
+
+// Errors
+
+// Types and methods
+pub(all) struct ReplayWitnessIdentity {
+  id : String
+  key : @bft.PublicKey
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

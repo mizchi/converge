@@ -1,0 +1,159 @@
+///|
+predicate open_world_central_bundle_post(
+  trusted_job_boundary_matches : Bool,
+  audit_transparency_published : Bool,
+  audit_plan_authenticated : Bool,
+  seal_and_seed_authenticated : Bool,
+  observer_registration_certified : Bool,
+  encounter_eligible : Bool,
+  encounter_replay_matches : Bool,
+) {
+  trusted_job_boundary_matches &&
+  audit_transparency_published &&
+  audit_plan_authenticated &&
+  seal_and_seed_authenticated &&
+  observer_registration_certified &&
+  encounter_eligible &&
+  encounter_replay_matches
+}
+
+///|
+pub lemma verified_open_world_bundle_requires_every_capability(
+  trusted_job_boundary_matches : Bool,
+  audit_transparency_published : Bool,
+  audit_plan_authenticated : Bool,
+  seal_and_seed_authenticated : Bool,
+  observer_registration_certified : Bool,
+  encounter_eligible : Bool,
+  encounter_replay_matches : Bool,
+) where {
+  proof_require: open_world_central_bundle_post(
+    trusted_job_boundary_matches,
+    audit_transparency_published,
+    audit_plan_authenticated,
+    seal_and_seed_authenticated,
+    observer_registration_certified,
+    encounter_eligible,
+    encounter_replay_matches,
+  ),
+  proof_ensure: trusted_job_boundary_matches == true,
+  proof_ensure: audit_transparency_published == true,
+  proof_ensure: audit_plan_authenticated == true,
+  proof_ensure: seal_and_seed_authenticated == true,
+  proof_ensure: observer_registration_certified == true,
+  proof_ensure: encounter_eligible == true,
+  proof_ensure: encounter_replay_matches == true,
+} {
+}
+
+///|
+pub lemma foreign_open_world_job_never_verifies(
+  audit_plan_authenticated : Bool,
+  seal_and_seed_authenticated : Bool,
+  observer_registration_certified : Bool,
+  encounter_eligible : Bool,
+  encounter_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_central_bundle_post(
+    false,
+    true,
+    audit_plan_authenticated,
+    seal_and_seed_authenticated,
+    observer_registration_certified,
+    encounter_eligible,
+    encounter_replay_matches,
+  ) == false,
+} {
+}
+
+///|
+pub lemma unpublished_open_world_audit_never_verifies(
+  audit_plan_authenticated : Bool,
+  seal_and_seed_authenticated : Bool,
+  observer_registration_certified : Bool,
+  encounter_eligible : Bool,
+  encounter_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_central_bundle_post(
+    true,
+    false,
+    audit_plan_authenticated,
+    seal_and_seed_authenticated,
+    observer_registration_certified,
+    encounter_eligible,
+    encounter_replay_matches,
+  ) == false,
+} {
+}
+
+///|
+pub lemma unauthenticated_open_world_plan_never_verifies(
+  seal_and_seed_authenticated : Bool,
+  observer_registration_certified : Bool,
+  encounter_eligible : Bool,
+  encounter_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_central_bundle_post(
+    true,
+    true,
+    false,
+    seal_and_seed_authenticated,
+    observer_registration_certified,
+    encounter_eligible,
+    encounter_replay_matches,
+  ) == false,
+} {
+}
+
+///|
+pub lemma unopened_open_world_seed_never_verifies(
+  observer_registration_certified : Bool,
+  encounter_eligible : Bool,
+  encounter_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_central_bundle_post(
+    true,
+    true,
+    true,
+    false,
+    observer_registration_certified,
+    encounter_eligible,
+    encounter_replay_matches,
+  ) == false,
+} {
+}
+
+///|
+pub lemma underquorum_open_world_registration_never_verifies(
+  encounter_eligible : Bool,
+  encounter_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_central_bundle_post(
+    true,
+    true,
+    true,
+    true,
+    false,
+    encounter_eligible,
+    encounter_replay_matches,
+  ) == false,
+} {
+}
+
+///|
+pub lemma uncommitted_open_world_encounter_never_verifies(
+  encounter_replay_matches : Bool,
+) where {
+  proof_ensure: open_world_central_bundle_post(
+    true, true, true, true, true, false, encounter_replay_matches,
+  ) == false,
+} {
+}
+
+///|
+pub lemma mismatched_open_world_replay_never_verifies() where {
+  proof_ensure: open_world_central_bundle_post(
+    true, true, true, true, true, true, false,
+  ) == false,
+} {
+}

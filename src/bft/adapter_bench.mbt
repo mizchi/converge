@@ -1,4 +1,13 @@
 ///|
+fn bench_adapter() -> BFTAdapter {
+  BFTAdapter::new(
+    FnvHasher::new(),
+    MockVerifier::new(),
+    session_id="bench-session",
+  )
+}
+
+///|
 /// Sign 1000 events with FnvHasher + MockSigner.
 test "bench: BFTAdapter sign 1000 events" (b : @bench.T) {
   let events : Array[@types.Event] = []
@@ -13,7 +22,7 @@ test "bench: BFTAdapter sign 1000 events" (b : @bench.T) {
     })
   }
   b.bench(fn() {
-    let adapter = BFTAdapter::new(FnvHasher::new(), MockVerifier::new())
+    let adapter = bench_adapter()
     let signer = MockSigner::new("alice")
     for i in 0..<1000 {
       let signed = adapter.sign(signer, events[i], [])
@@ -25,7 +34,7 @@ test "bench: BFTAdapter sign 1000 events" (b : @bench.T) {
 ///|
 /// Deliver 1000 signed events in a linear dependency chain.
 test "bench: BFTAdapter deliver 1000 events (linear)" (b : @bench.T) {
-  let src_adapter = BFTAdapter::new(FnvHasher::new(), MockVerifier::new())
+  let src_adapter = bench_adapter()
   let signer = MockSigner::new("alice")
   let signed_events : Array[SignedEvent] = []
   for i in 0..<1000 {
@@ -51,7 +60,8 @@ test "bench: BFTAdapter deliver 1000 events (linear)" (b : @bench.T) {
     signed_events.push(signed)
   }
   b.bench(fn() {
-    let adapter = BFTAdapter::new(FnvHasher::new(), MockVerifier::new())
+    let adapter = bench_adapter()
+    ignore(adapter.register_peer(@types.PeerId("alice"), signer.public_key()))
     for i in 0..<1000 {
       let result = adapter.deliver(signed_events[i])
       b.keep(result)
@@ -62,7 +72,7 @@ test "bench: BFTAdapter deliver 1000 events (linear)" (b : @bench.T) {
 ///|
 /// Deliver 1000 independent signed events (no dependencies).
 test "bench: BFTAdapter deliver 1000 events (no deps)" (b : @bench.T) {
-  let src_adapter = BFTAdapter::new(FnvHasher::new(), MockVerifier::new())
+  let src_adapter = bench_adapter()
   let signer = MockSigner::new("alice")
   let signed_events : Array[SignedEvent] = []
   for i in 0..<1000 {
@@ -78,7 +88,8 @@ test "bench: BFTAdapter deliver 1000 events (no deps)" (b : @bench.T) {
     signed_events.push(signed)
   }
   b.bench(fn() {
-    let adapter = BFTAdapter::new(FnvHasher::new(), MockVerifier::new())
+    let adapter = bench_adapter()
+    ignore(adapter.register_peer(@types.PeerId("alice"), signer.public_key()))
     for i in 0..<1000 {
       let result = adapter.deliver(signed_events[i])
       b.keep(result)
@@ -89,7 +100,7 @@ test "bench: BFTAdapter deliver 1000 events (no deps)" (b : @bench.T) {
 ///|
 /// Deliver 100 events in reverse order (all buffered), then deliver root to flush.
 test "bench: BFTAdapter causal flush 100 buffered" (b : @bench.T) {
-  let src_adapter = BFTAdapter::new(FnvHasher::new(), MockVerifier::new())
+  let src_adapter = bench_adapter()
   let signer = MockSigner::new("alice")
   let signed_events : Array[SignedEvent] = []
   for i in 0..<101 {
@@ -115,7 +126,8 @@ test "bench: BFTAdapter causal flush 100 buffered" (b : @bench.T) {
     signed_events.push(signed)
   }
   b.bench(fn() {
-    let adapter = BFTAdapter::new(FnvHasher::new(), MockVerifier::new())
+    let adapter = bench_adapter()
+    ignore(adapter.register_peer(@types.PeerId("alice"), signer.public_key()))
     // Deliver events 1..100 in reverse order — all will be buffered
     for j in 0..<100 {
       let idx = 100 - j

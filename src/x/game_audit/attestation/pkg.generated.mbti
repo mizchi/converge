@@ -1,0 +1,153 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/x/game_audit/attestation"
+
+import {
+  "mizchi/converge/audit/quorum",
+  "mizchi/converge/bft",
+  "mizchi/converge/x/game_audit/audit",
+  "mizchi/converge/x/game_audit/checkpoint",
+  "mizchi/converge/x/game_audit/replay",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn finalize_witnessed_checkpoint(@checkpoint.VerifiedCheckpoint, WitnessReplayCertificate) -> CheckpointFinalizationResult
+
+pub fn replay_witness_session_manifest(&@bft.Hasher, game_manifest_digest~ : @bft.Digest, referee_key~ : @bft.PublicKey, witnesses~ : Array[Participant], max_faults~ : Int) -> @bft.Digest
+
+pub fn serialize_attestation(Attestation) -> String
+
+pub fn sign_attestation(&@bft.Hasher, &@bft.Signer, @checkpoint.PreparedCheckpoint, String, AttestationChoice) -> SignedAttestation
+
+pub fn sign_replay_witness_attestation(&@bft.Hasher, &@bft.Signer, @checkpoint.PreparedCheckpoint, String, AttestationChoice) -> SignedAttestation
+
+// Errors
+
+// Types and methods
+pub(all) struct Attestation {
+  checkpoint_digest : @bft.Digest
+  participant_id : String
+  purpose : AttestationPurpose
+  choice : AttestationChoice
+} derive(Eq, @debug.Debug)
+
+pub(all) enum AttestationChoice {
+  Approve
+  Challenge
+} derive(Eq, @debug.Debug)
+
+pub(all) enum AttestationPurpose {
+  CheckpointApproval
+  ReplayWitness
+} derive(Eq, @debug.Debug)
+
+pub(all) struct AuditEvidence {
+  approvals : FixedArray[Bool]
+  challenged : Bool
+}
+
+pub(all) enum CheckpointFinalizationResult {
+  Ready(FinalizedCheckpoint)
+  Deferred(@audit.CheckpointDecision)
+  CheckpointMismatch
+}
+
+pub(all) struct EvidenceAlert {
+  kind : EvidenceAlertKind
+  participant_id : String
+  digest : @bft.Digest
+  detail : String
+} derive(Eq, @debug.Debug)
+
+pub(all) enum EvidenceAlertKind {
+  InvalidRoster
+  HashMismatch
+  UnknownParticipant
+  SignerKeyMismatch
+  InvalidSignature
+  WrongCheckpoint
+  WrongPurpose
+  Equivocation
+} derive(Eq, @debug.Debug)
+
+pub struct EvidenceCollector {
+  inner : @quorum.VoteCollector
+}
+pub fn EvidenceCollector::checkpoint_digest(Self) -> @bft.Digest
+pub fn EvidenceCollector::decide(Self, Int, authority~ : @audit.AuthorityVerdict, authority_key~ : @bft.PublicKey, replay_match~ : @replay.CheckpointReplayMatch?) -> @audit.CheckpointDecision
+pub fn EvidenceCollector::deliver(Self, SignedAttestation) -> EvidenceDeliveryResult
+pub fn EvidenceCollector::evidence(Self) -> AuditEvidence
+pub fn EvidenceCollector::finalize(Self, @checkpoint.VerifiedCheckpoint, Int, replay_match~ : @replay.CheckpointReplayMatch?, witness_certificate? : WitnessReplayCertificate) -> CheckpointFinalizationResult
+pub fn EvidenceCollector::is_roster_valid(Self) -> Bool
+pub fn EvidenceCollector::new(&@bft.Hasher, &@bft.Verifier, @checkpoint.PreparedCheckpoint, Array[Participant]) -> Self
+
+pub(all) enum EvidenceDeliveryResult {
+  Accepted
+  Duplicate
+  Rejected(EvidenceAlert)
+} derive(Eq, @debug.Debug)
+
+pub struct FinalizedCheckpoint {
+  verified : @checkpoint.VerifiedCheckpoint
+}
+pub fn FinalizedCheckpoint::checkpoint(Self) -> @checkpoint.Checkpoint
+pub fn FinalizedCheckpoint::digest(Self) -> @bft.Digest
+
+pub(all) struct Participant {
+  id : String
+  key : @bft.PublicKey
+} derive(Eq, @debug.Debug)
+
+pub(all) enum ReplayWitnessCertificationResult {
+  WitnessCertified(WitnessReplayCertificate)
+  WitnessCheckpointMismatch
+  WitnessRefereeMismatch
+  WitnessQuorumPending(Int, Int)
+} derive(Eq, @debug.Debug)
+
+pub struct ReplayWitnessCollector {
+  evidence : EvidenceCollector
+  witness_count : Int
+  max_faults : Int
+  referee_key : @bft.PublicKey
+}
+pub fn ReplayWitnessCollector::certify(Self, @checkpoint.VerifiedCheckpoint) -> ReplayWitnessCertificationResult
+pub fn ReplayWitnessCollector::deliver(Self, SignedAttestation) -> EvidenceDeliveryResult
+pub fn ReplayWitnessCollector::new(&@bft.Hasher, &@bft.Verifier, @checkpoint.PreparedCheckpoint, game_manifest_digest~ : @bft.Digest, referee_key~ : @bft.PublicKey, witnesses~ : Array[Participant], max_faults~ : Int) -> ReplayWitnessCollectorBuildResult
+pub fn ReplayWitnessCollector::required_approvals(Self) -> Int
+
+pub(all) enum ReplayWitnessCollectorBuildResult {
+  WitnessCollectorReady(ReplayWitnessCollector)
+  InvalidGameManifest
+  InvalidRefereeKey
+  InvalidWitnessPolicy
+  InvalidWitnessRoster
+  RefereeIsWitness
+  WitnessManifestMismatch
+}
+
+pub(all) struct SignedAttestation {
+  attestation : Attestation
+  digest : @bft.Digest
+  signature : @bft.Signature
+  signer_key : @bft.PublicKey
+} derive(Eq, @debug.Debug)
+
+pub struct WitnessReplayCertificate {
+  checkpoint_digest : @bft.Digest
+  referee_key : @bft.PublicKey
+  witness_count : Int
+  max_faults : Int
+  approval_count : Int
+} derive(Eq, @debug.Debug)
+pub fn WitnessReplayCertificate::approval_count(Self) -> Int
+pub fn WitnessReplayCertificate::checkpoint_digest(Self) -> @bft.Digest
+pub fn WitnessReplayCertificate::max_faults(Self) -> Int
+pub fn WitnessReplayCertificate::referee_key(Self) -> @bft.PublicKey
+pub fn WitnessReplayCertificate::required_approvals(Self) -> Int
+pub fn WitnessReplayCertificate::witness_count(Self) -> Int
+
+// Type aliases
+
+// Traits
+

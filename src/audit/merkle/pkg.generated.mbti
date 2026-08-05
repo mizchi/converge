@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "mizchi/converge/audit/merkle"
+
+import {
+  "mizchi/converge/bft",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn verify_inclusion(&@bft.Hasher, String, @bft.Digest, MerkleProof) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct MerkleProof {
+  leaf_index : Int
+  leaf_count : Int
+  path : Array[MerkleStep]
+} derive(Eq, @debug.Debug)
+
+pub(all) enum MerkleStep {
+  SiblingLeft(@bft.Digest)
+  SiblingRight(@bft.Digest)
+} derive(Eq, @debug.Debug)
+
+pub struct MerkleTree {
+  leaf_hashes : Array[@bft.Digest]
+  levels : Array[Array[@bft.Digest]]
+  root_digest : @bft.Digest
+}
+pub fn MerkleTree::build(&@bft.Hasher, Array[String]) -> Self
+pub fn MerkleTree::leaf_count(Self) -> Int
+pub fn MerkleTree::proof(Self, Int) -> MerkleProof?
+pub fn MerkleTree::root(Self) -> @bft.Digest
+
+// Type aliases
+
+// Traits
+

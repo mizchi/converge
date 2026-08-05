@@ -1,0 +1,35 @@
+{
+  "name": "converge-cf-game-audit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:moon": "moon build --target js --release",
+    "pretest": "pnpm run build:moon",
+    "predeploy": "pnpm run build:moon",
+    "predeploy:dry": "pnpm run build:moon",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dry": "wrangler deploy --dry-run",
+    "bench": "tsx scripts/bench.ts",
+    "bench:local": "tsx scripts/bench.ts",
+    "bench:witness": "tsx scripts/bench-witness.ts",
+    "witness": "tsx scripts/witness-client.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.20.1",
+    "@cloudflare/workers-types": "5.20260804.1",
+    "@types/node": "24.13.3",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10",
+    "wrangler": "4.118.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  }
+}

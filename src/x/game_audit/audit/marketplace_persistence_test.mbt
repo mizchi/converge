@@ -1,0 +1,30 @@
+///|
+test "marketplace creation persists only after every binding passes" {
+  assert_true(
+    marketplace_creation_persist_allowed(
+      open_world_boundary=true,
+      central_replay_verified=true,
+      summary_normalized=true,
+      checkpoint_bound=true,
+      conflict_free=true,
+    ),
+  )
+  assert_false(
+    marketplace_creation_persist_allowed(
+      open_world_boundary=true,
+      central_replay_verified=true,
+      summary_normalized=true,
+      checkpoint_bound=true,
+      conflict_free=false,
+    ),
+  )
+  assert_false(
+    marketplace_creation_persist_allowed(
+      open_world_boundary=false,
+      central_replay_verified=true,
+      summary_normalized=true,
+      checkpoint_bound=true,
+      conflict_free=true,
+    ),
+  )
+}

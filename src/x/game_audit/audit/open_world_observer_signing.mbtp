@@ -1,0 +1,137 @@
+///|
+predicate open_world_observer_signing_is_new(
+  decision : OpenWorldObserverSigningDecision,
+) {
+  match decision {
+    SignNewObservation => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_observer_signing_is_retry(
+  decision : OpenWorldObserverSigningDecision,
+) {
+  match decision {
+    ReuseExistingObservation => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_observer_signing_is_conflict(
+  decision : OpenWorldObserverSigningDecision,
+) {
+  match decision {
+    RejectConflictingObservation => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_observer_signing_is_invalid(
+  decision : OpenWorldObserverSigningDecision,
+) {
+  match decision {
+    RejectInvalidObservation => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_observer_signing_post(
+  target_valid : Bool,
+  previous_observation_present : Bool,
+  previous_digest_matches : Bool,
+  decision : OpenWorldObserverSigningDecision,
+) {
+  if !target_valid {
+    open_world_observer_signing_is_invalid(decision)
+  } else {
+    if !previous_observation_present {
+      open_world_observer_signing_is_new(decision)
+    } else {
+      if previous_digest_matches {
+        open_world_observer_signing_is_retry(decision)
+      } else {
+        open_world_observer_signing_is_conflict(decision)
+      }
+    }
+  }
+}
+
+///|
+pub lemma new_observer_signature_requires_empty_plan_slot(
+  target_valid : Bool,
+  previous_observation_present : Bool,
+  previous_digest_matches : Bool,
+) where {
+  proof_require: open_world_observer_signing_post(
+    target_valid,
+    previous_observation_present,
+    previous_digest_matches,
+    SignNewObservation,
+  ),
+  proof_ensure: target_valid == true,
+  proof_ensure: previous_observation_present == false,
+} {
+}
+
+///|
+pub lemma reused_observer_signature_requires_exact_digest(
+  target_valid : Bool,
+  previous_observation_present : Bool,
+  previous_digest_matches : Bool,
+) where {
+  proof_require: open_world_observer_signing_post(
+    target_valid,
+    previous_observation_present,
+    previous_digest_matches,
+    ReuseExistingObservation,
+  ),
+  proof_ensure: target_valid == true,
+  proof_ensure: previous_observation_present == true,
+  proof_ensure: previous_digest_matches == true,
+} {
+}
+
+///|
+pub lemma conflicting_observer_digest_is_rejected() where {
+  proof_ensure: open_world_observer_signing_post(
+    true,
+    true,
+    false,
+    RejectConflictingObservation,
+  ),
+} {
+}
+
+///|
+pub lemma existing_plan_slot_never_signs_a_second_observation(
+  target_valid : Bool,
+  previous_digest_matches : Bool,
+  decision : OpenWorldObserverSigningDecision,
+) where {
+  proof_require: open_world_observer_signing_post(
+    target_valid,
+    true,
+    previous_digest_matches,
+    decision,
+  ),
+  proof_ensure: open_world_observer_signing_is_new(decision) == false,
+} {
+}
+
+///|
+pub lemma invalid_observer_target_is_rejected(
+  previous_observation_present : Bool,
+  previous_digest_matches : Bool,
+) where {
+  proof_ensure: open_world_observer_signing_post(
+    false,
+    previous_observation_present,
+    previous_digest_matches,
+    RejectInvalidObservation,
+  ),
+} {
+}

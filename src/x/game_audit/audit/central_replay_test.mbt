@@ -1,0 +1,61 @@
+///|
+test "anchor delivery alone waits for a complete replay transcript" {
+  assert_eq(
+    classify_central_replay_artifacts(
+      anchor_matches_job=true,
+      transcript_present=false,
+      checkpoint_link_valid=false,
+      kernel_replay_complete=false,
+      kernel_replay_matches=false,
+    ),
+    CentralReplayArtifactDecision::AwaitReplayTranscript,
+  )
+}
+
+///|
+test "central replay verifies only a complete linked kernel match" {
+  assert_eq(
+    classify_central_replay_artifacts(
+      anchor_matches_job=true,
+      transcript_present=true,
+      checkpoint_link_valid=true,
+      kernel_replay_complete=true,
+      kernel_replay_matches=true,
+    ),
+    CentralReplayArtifactDecision::VerifyCentralReplay,
+  )
+  assert_eq(
+    classify_central_replay_artifacts(
+      anchor_matches_job=true,
+      transcript_present=true,
+      checkpoint_link_valid=true,
+      kernel_replay_complete=true,
+      kernel_replay_matches=false,
+    ),
+    CentralReplayArtifactDecision::RejectReplayMismatch,
+  )
+}
+
+///|
+test "foreign anchor and invalid checkpoint link fail closed" {
+  assert_eq(
+    classify_central_replay_artifacts(
+      anchor_matches_job=false,
+      transcript_present=true,
+      checkpoint_link_valid=true,
+      kernel_replay_complete=true,
+      kernel_replay_matches=true,
+    ),
+    CentralReplayArtifactDecision::RejectReplayBoundary,
+  )
+  assert_eq(
+    classify_central_replay_artifacts(
+      anchor_matches_job=true,
+      transcript_present=true,
+      checkpoint_link_valid=false,
+      kernel_replay_complete=true,
+      kernel_replay_matches=true,
+    ),
+    CentralReplayArtifactDecision::RejectReplayCheckpointLink,
+  )
+}

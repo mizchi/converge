@@ -1,0 +1,191 @@
+///|
+predicate checkpoint_head_is_advance(decision : CheckpointHeadDecision) {
+  match decision {
+    Advance => true
+    _ => false
+  }
+}
+
+///|
+predicate checkpoint_head_is_duplicate(decision : CheckpointHeadDecision) {
+  match decision {
+    Duplicate => true
+    _ => false
+  }
+}
+
+///|
+predicate checkpoint_head_is_same_epoch_fork(
+  decision : CheckpointHeadDecision,
+) {
+  match decision {
+    SameEpochFork => true
+    _ => false
+  }
+}
+
+///|
+predicate checkpoint_head_is_parent_fork(decision : CheckpointHeadDecision) {
+  match decision {
+    ParentFork => true
+    _ => false
+  }
+}
+
+///|
+predicate checkpoint_head_is_fork(decision : CheckpointHeadDecision) {
+  checkpoint_head_is_same_epoch_fork(decision) ||
+  checkpoint_head_is_parent_fork(decision)
+}
+
+///|
+predicate checkpoint_head_is_gap(decision : CheckpointHeadDecision) {
+  match decision {
+    Gap => true
+    _ => false
+  }
+}
+
+///|
+predicate checkpoint_head_is_stale(decision : CheckpointHeadDecision) {
+  match decision {
+    Stale => true
+    _ => false
+  }
+}
+
+///|
+predicate checkpoint_head_is_boundary_mismatch(
+  decision : CheckpointHeadDecision,
+) {
+  match decision {
+    BoundaryMismatch => true
+    _ => false
+  }
+}
+
+///|
+predicate checkpoint_head_decision_post(
+  boundary_matches : Bool,
+  epoch_known : Bool,
+  known_digest_matches : Bool,
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+  decision : CheckpointHeadDecision,
+) {
+  if !boundary_matches {
+    checkpoint_head_is_boundary_mismatch(decision)
+  } else {
+    if epoch_known {
+      if known_digest_matches {
+        checkpoint_head_is_duplicate(decision)
+      } else {
+        checkpoint_head_is_same_epoch_fork(decision)
+      }
+    } else {
+      if incoming_epoch > current_epoch &&
+        incoming_epoch - 1 == current_epoch {
+        if parent_matches {
+          checkpoint_head_is_advance(decision)
+        } else {
+          checkpoint_head_is_parent_fork(decision)
+        }
+      } else {
+        if incoming_epoch > current_epoch {
+          checkpoint_head_is_gap(decision)
+        } else {
+          checkpoint_head_is_stale(decision)
+        }
+      }
+    }
+  }
+}
+
+///|
+pub lemma advanced_checkpoint_head_requires_exact_extension(
+  boundary_matches : Bool,
+  epoch_known : Bool,
+  known_digest_matches : Bool,
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+) where {
+  proof_require: checkpoint_head_decision_post(
+    boundary_matches,
+    epoch_known,
+    known_digest_matches,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    Advance,
+  ),
+  proof_ensure: boundary_matches == true,
+  proof_ensure: epoch_known == false,
+  proof_ensure: incoming_epoch == current_epoch + 1,
+  proof_ensure: parent_matches == true,
+} {
+}
+
+///|
+pub lemma boundary_mismatch_never_advances_or_accuses(
+  epoch_known : Bool,
+  known_digest_matches : Bool,
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+) where {
+  proof_ensure: checkpoint_head_decision_post(
+    false,
+    epoch_known,
+    known_digest_matches,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    BoundaryMismatch,
+  ),
+  proof_ensure: checkpoint_head_is_advance(BoundaryMismatch) == false,
+  proof_ensure: checkpoint_head_is_fork(BoundaryMismatch) == false,
+} {
+}
+
+///|
+pub lemma known_different_checkpoint_head_is_a_fork(
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+) where {
+  proof_ensure: checkpoint_head_decision_post(
+    true,
+    true,
+    false,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    SameEpochFork,
+  ),
+  proof_ensure: checkpoint_head_is_fork(SameEpochFork),
+} {
+}
+
+///|
+pub lemma missing_checkpoint_heads_create_gap_not_fork(
+  current_epoch : Int,
+  incoming_epoch : Int,
+  known_digest_matches : Bool,
+  parent_matches : Bool,
+) where {
+  proof_require: incoming_epoch > current_epoch,
+  proof_require: incoming_epoch - 1 != current_epoch,
+  proof_ensure: checkpoint_head_decision_post(
+    true,
+    false,
+    known_digest_matches,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    Gap,
+  ),
+  proof_ensure: checkpoint_head_is_fork(Gap) == false,
+} {
+}

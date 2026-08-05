@@ -1,0 +1,94 @@
+{
+  "benchmark": "checkpoint-witness-collection-v1",
+  "generated_at": "2026-08-04T16:39:02.107Z",
+  "environment": {
+    "client": "Tokyo",
+    "runtime": "Cloudflare Workers + SQLite Durable Objects",
+    "location_hint": "apac-ne"
+  },
+  "mode": "pvp",
+  "runs": 20,
+  "crypto": "experimental_sha256_ed25519_unaudited",
+  "source_bucketing": "server_secret_hmac_sha256",
+  "statistics": {
+    "percentile_method": "legacy_floor_index",
+    "warning": "at n=20 the recorded p95 is max; do not use for tail budgeting"
+  },
+  "load": {
+    "source_mode": "single-egress",
+    "approval_mode": "parallel",
+    "hostile_burst_size": 9,
+    "hostile_max_bursts": 3,
+    "hostile_source": "client-egress",
+    "valid_approvals_per_collection": 3,
+    "valid_source": "client-egress-after-retry-after"
+  },
+  "latency": {
+    "collection_start": {
+      "count": 20,
+      "mean_ms": 529.645,
+      "p50_ms": 246.677,
+      "p95_ms": 3138.586,
+      "p99_ms": 3138.586,
+      "max_ms": 3138.586
+    },
+    "hostile_rejection": {
+      "count": 185,
+      "mean_ms": 819.376,
+      "p50_ms": 781.743,
+      "p95_ms": 1483.294,
+      "p99_ms": 2135.315,
+      "max_ms": 12149.713
+    },
+    "hostile_limit": {
+      "count": 20,
+      "mean_ms": 951.537,
+      "p50_ms": 850.259,
+      "p95_ms": 2399.617,
+      "p99_ms": 2399.617,
+      "max_ms": 2399.617
+    },
+    "approval_roundtrip": {
+      "count": 60,
+      "mean_ms": 789.957,
+      "p50_ms": 638.839,
+      "p95_ms": 1619.286,
+      "p99_ms": 3971.581,
+      "max_ms": 3971.581
+    },
+    "quorum_wall": {
+      "count": 20,
+      "mean_ms": 1093.013,
+      "p50_ms": 940.13,
+      "p95_ms": 3972.901,
+      "p99_ms": 3972.901,
+      "max_ms": 3972.901
+    },
+    "server_collection": {
+      "count": 20,
+      "mean_ms": 3884.6,
+      "p50_ms": 3027,
+      "p95_ms": 13925,
+      "p99_ms": 13925,
+      "max_ms": 13925
+    },
+    "seal": {
+      "count": 20,
+      "mean_ms": 476.542,
+      "p50_ms": 459.493,
+      "p95_ms": 1103.82,
+      "p99_ms": 1103.82,
+      "max_ms": 1103.82
+    }
+  },
+  "payload": {
+    "approval_request": {
+      "count": 60,
+      "mean_bytes": 680.5,
+      "p50_bytes": 682,
+      "p95_bytes": 682,
+      "p99_bytes": 682,
+      "max_bytes": 682
+    }
+  }
+}

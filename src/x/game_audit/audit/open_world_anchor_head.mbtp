@@ -1,0 +1,248 @@
+///|
+predicate open_world_signing_anchor_head_is_advanced(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  match decision {
+    AdvanceSigningAnchorHead => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_head_is_duplicate(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  match decision {
+    DuplicateSigningAnchorHead => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_head_is_same_epoch_fork(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  match decision {
+    DetectSameEpochSigningAnchorFork => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_head_is_parent_fork(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  match decision {
+    DetectSigningAnchorParentFork => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_head_is_fork(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  open_world_signing_anchor_head_is_same_epoch_fork(decision) ||
+  open_world_signing_anchor_head_is_parent_fork(decision)
+}
+
+///|
+predicate open_world_signing_anchor_head_is_boundary_rejection(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  match decision {
+    RejectSigningAnchorHeadBoundary => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_head_is_gap(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  match decision {
+    SigningAnchorHeadGap => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_head_is_stale(
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  match decision {
+    StaleSigningAnchorHead => true
+    _ => false
+  }
+}
+
+///|
+predicate open_world_signing_anchor_head_post(
+  boundary_matches : Bool,
+  epoch_known : Bool,
+  known_digest_matches : Bool,
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+  decision : OpenWorldSigningAnchorHeadDecision,
+) {
+  if !boundary_matches {
+    open_world_signing_anchor_head_is_boundary_rejection(decision)
+  } else {
+    if epoch_known {
+      if known_digest_matches {
+        open_world_signing_anchor_head_is_duplicate(decision)
+      } else {
+        open_world_signing_anchor_head_is_same_epoch_fork(decision)
+      }
+    } else {
+      if incoming_epoch > current_epoch &&
+        incoming_epoch - 1 == current_epoch {
+        if parent_matches {
+          open_world_signing_anchor_head_is_advanced(decision)
+        } else {
+          open_world_signing_anchor_head_is_parent_fork(decision)
+        }
+      } else {
+        if incoming_epoch > current_epoch {
+          open_world_signing_anchor_head_is_gap(decision)
+        } else {
+          open_world_signing_anchor_head_is_stale(decision)
+        }
+      }
+    }
+  }
+}
+
+///|
+pub lemma advanced_signing_anchor_head_requires_exact_parent(
+  boundary_matches : Bool,
+  epoch_known : Bool,
+  known_digest_matches : Bool,
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+) where {
+  proof_require: open_world_signing_anchor_head_post(
+    boundary_matches,
+    epoch_known,
+    known_digest_matches,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    AdvanceSigningAnchorHead,
+  ),
+  proof_ensure: boundary_matches == true,
+  proof_ensure: epoch_known == false,
+  proof_ensure: incoming_epoch == current_epoch + 1,
+  proof_ensure: parent_matches == true,
+} {
+}
+
+///|
+pub lemma duplicate_signing_anchor_head_requires_known_digest(
+  boundary_matches : Bool,
+  epoch_known : Bool,
+  known_digest_matches : Bool,
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+) where {
+  proof_require: open_world_signing_anchor_head_post(
+    boundary_matches,
+    epoch_known,
+    known_digest_matches,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    DuplicateSigningAnchorHead,
+  ),
+  proof_ensure: boundary_matches == true,
+  proof_ensure: epoch_known == true,
+  proof_ensure: known_digest_matches == true,
+} {
+}
+
+///|
+pub lemma known_different_signing_anchor_head_is_a_fork(
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+) where {
+  proof_ensure: open_world_signing_anchor_head_post(
+    true,
+    true,
+    false,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    DetectSameEpochSigningAnchorFork,
+  ),
+} {
+}
+
+///|
+pub lemma next_signing_anchor_head_with_wrong_parent_is_a_fork(
+  current_epoch : Int,
+  known_digest_matches : Bool,
+) where {
+  proof_ensure: open_world_signing_anchor_head_post(
+    true,
+    false,
+    known_digest_matches,
+    current_epoch,
+    current_epoch + 1,
+    false,
+    DetectSigningAnchorParentFork,
+  ),
+} {
+}
+
+///|
+pub lemma foreign_signing_anchor_head_never_advances_or_accuses(
+  epoch_known : Bool,
+  known_digest_matches : Bool,
+  current_epoch : Int,
+  incoming_epoch : Int,
+  parent_matches : Bool,
+) where {
+  proof_ensure: open_world_signing_anchor_head_post(
+    false,
+    epoch_known,
+    known_digest_matches,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    RejectSigningAnchorHeadBoundary,
+  ),
+  proof_ensure: open_world_signing_anchor_head_is_advanced(
+    RejectSigningAnchorHeadBoundary,
+  ) == false,
+  proof_ensure: open_world_signing_anchor_head_is_fork(
+    RejectSigningAnchorHeadBoundary,
+  ) == false,
+} {
+}
+
+///|
+pub lemma missing_signing_anchor_heads_create_gap_not_fork(
+  current_epoch : Int,
+  incoming_epoch : Int,
+  known_digest_matches : Bool,
+  parent_matches : Bool,
+) where {
+  proof_require: incoming_epoch > current_epoch,
+  proof_require: incoming_epoch - 1 != current_epoch,
+  proof_ensure: open_world_signing_anchor_head_post(
+    true,
+    false,
+    known_digest_matches,
+    current_epoch,
+    incoming_epoch,
+    parent_matches,
+    SigningAnchorHeadGap,
+  ),
+  proof_ensure: open_world_signing_anchor_head_is_fork(SigningAnchorHeadGap) ==
+    false,
+} {
+}
